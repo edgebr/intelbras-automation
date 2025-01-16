@@ -11,7 +11,7 @@ Suite Teardown    Suite Teardown
 # # 1 - Requisição bem-sucedida (200 OK)
 # Get Successful Response
 #     [Documentation]    Testa uma requisição bem-sucedida no endpoint GET.
-#     Create Session    api_session    ${BASE_URL}
+
 
 # # 2 - Não autorizado (401 Unauthorized)
 # Get Unauthorized Response
@@ -45,9 +45,6 @@ Suite Teardown    Suite Teardown
 # Validate Response Time
 #     [Documentation]    Verifica se o tempo de resposta está dentro do SLA.
 
-# # 10 - Resposta da criação
-# Validate Resource Creation Response
-#     [Documentation]    Verifica se a resposta para criação de recurso via GET (se aplicável) é válida.
 
 # # 11 - Paginação
 # Validate Pagination
