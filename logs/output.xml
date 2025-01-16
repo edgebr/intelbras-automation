@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.1 (Python 3.12.6 on win32)" generated="2025-01-16T18:00:11.429545" rpa="false" schemaversion="5">
+<suite id="s1" name="1GET user" source="C:\Projetos\EDGE\intelbras-automation\intelbras-automation\test\api\2user\1GET_user.robot">
+<kw name="Suite Setup" owner="resource" type="SETUP">
+<kw name="Create Session" owner="RequestsLibrary">
+<msg time="2025-01-16T18:00:11.855502" level="INFO">Creating Session using : alias=user, url=http://18.228.160.85:5000, headers={'x-api-key': 'c91f3812554f58600bdecffa4233f8ef397a6c3e42d00489e1b4ed168fb0cbfc'},                     cookies={}, auth=None, timeout=None, proxies=None, verify=False,                     debug=0 </msg>
+<arg>user</arg>
+<arg>${BASE_URL}</arg>
+<arg>headers=${HEADERS}</arg>
+<doc>Create Session: create a HTTP session to a server</doc>
+<status status="PASS" start="2025-01-16T18:00:11.855502" elapsed="0.000000"/>
+</kw>
+<status status="PASS" start="2025-01-16T18:00:11.855502" elapsed="0.000000"/>
+</kw>
+<test id="s1-t1" name="Get Successful Response" line="9">
+<kw name="Get Users" owner="1GET_user">
+<kw name="GET" owner="RequestsLibrary">
+<msg time="2025-01-16T18:00:12.011845" level="INFO">GET Request : url=http://18.228.160.85:5000/users 
+ path_url=/users 
+ headers={'User-Agent': 'python-requests/2.32.3', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'x-api-key': 'c91f3812554f58600bdecffa4233f8ef397a6c3e42d00489e1b4ed168fb0cbfc'} 
+ body=None 
+ </msg>
+<msg time="2025-01-16T18:00:12.011845" level="INFO">GET Response : url=http://18.228.160.85:5000/users 
+ status=200, reason=OK 
+ headers={'X-Powered-By': 'Express', 'Access-Control-Allow-Origin': 'http://18.228.160.85:5173', 'Vary': 'Origin', 'Access-Control-Allow-Credentials': 'true', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '1344', 'ETag': 'W/"540-i5FyStpIaBrFsKtAxspf7QQL3LU"', 'Date': 'Thu, 16 Jan 2025 21:00:14 GMT', 'Connection': 'keep-alive', 'Keep-Alive': 'timeout=5'} 
+ body=[{"id":"6caa634a-64a7-468c-bc9c-2f99345e2fbb","email":"user@test.com","name":"Usuário","createdAt":"2024-04-04T21:18:20.032Z","updatedAt":"2024-04-04T21:18:20.032Z"},{"id":"oM6ENY7e01hGxdmyjjz3wmYYQ_mKBjsh6_xqiMZirUM","email":null,"name":"Rafael Gomes","createdAt":"2024-10-23T18:35:06.754Z","updatedAt":"2024-10-23T18:35:06.754Z"},{"id":"arutFvFkwZkaSPzdzmhwGAq12EW9HzwppgMG1JVRcQo","email":null,"name":"Elder Cirilo","createdAt":"2024-10-25T21:06:34.071Z","updatedAt":"2024-10-25T21:06:34.071Z"},{"id":"NGZyiDPSy-JUy8r7vPxifPSzNg-wF3xHTKW8VNu8Ec4","email":null,"name":"Luiz Farias","createdAt":"2024-10-28T14:23:42.241Z","updatedAt":"2024-10-28T14:23:42.241Z"},{"id":"3AyQlUi-izP3kBWbHHp1JCX1qUiEk7D2a75C8rcRLFM","email":null,"name":"Lucas Barroso","createdAt":"2024-10-28T15:51:21.513Z","updatedAt":"2024-10-28T15:51:21.513Z"},{"id":"bbysPq1TotUAry9W6B4t4Z0us0CI65GXR0TjYB38Lhs","email":null,"name":"Douglas Lopes","createdAt":"2024-11-04T19:16:16.133Z","updatedAt":"2024-11-04T19:16:16.133Z"},{"id":"j1peJPAE_BoLqtdU8nbJABpR2BtiBIpyzD5TZO8Ymjo","email":null,"name":"Diogo Muller de Miranda","createdAt":"2024-11-05T13:19:20.169Z","updatedAt":"2024-11-05T13:19:20.169Z"},{"id":"nIwZix-S6VRgbEUtNYHXaI1aBF0VCxOn4ww5OrMJ1cY","email":null,"name":"Rafael Oliveira","createdAt":"2024-11-26T15:16:25.283Z","updatedAt":"2024-11-26T15:16:25.283Z"}] 
+ </msg>
+<msg time="2025-01-16T18:00:12.011845" level="INFO">${response} = &lt;Response [200]&gt;</msg>
+<var>${response}</var>
+<arg>${BASE_URL}/users</arg>
+<arg>headers=${HEADERS}</arg>
+<doc>Sends a GET request.</doc>
+<status status="PASS" start="2025-01-16T18:00:11.855502" elapsed="0.156343"/>
+</kw>
+<return>
+<value>${response}</value>
+<status status="PASS" start="2025-01-16T18:00:12.011845" elapsed="0.000000"/>
+</return>
+<msg time="2025-01-16T18:00:12.011845" level="INFO">${response} = &lt;Response [200]&gt;</msg>
+<var>${response}</var>
+<status status="PASS" start="2025-01-16T18:00:11.855502" elapsed="0.156343"/>
+</kw>
+<kw name="Validate Status Code 200" owner="1GET_user">
+<kw name="Status Should Be" owner="RequestsLibrary">
+<arg>200</arg>
+<arg>${response}</arg>
+<doc>Fails if response status code is different than the expected.</doc>
+<status status="PASS" start="2025-01-16T18:00:12.012851" elapsed="0.000000"/>
+</kw>
+<arg>${response}</arg>
+<status status="PASS" start="2025-01-16T18:00:12.011845" elapsed="0.001006"/>
+</kw>
+<kw name="Validate Response Has Content" owner="1GET_user">
+<kw name="Should Not Be Empty" owner="BuiltIn">
+<msg time="2025-01-16T18:00:12.013502" level="INFO">Length is 1344.</msg>
+<arg>${response.content}</arg>
+<arg>Response body should not be empty</arg>
+<doc>Verifies that the given item is not empty.</doc>
+<status status="PASS" start="2025-01-16T18:00:12.013502" elapsed="0.000000"/>
+</kw>
+<arg>${response}</arg>
+<status status="PASS" start="2025-01-16T18:00:12.012851" elapsed="0.000651"/>
+</kw>
+<doc>Testa uma requisição bem-sucedida no endpoint GET.</doc>
+<tag>positive</tag>
+<status status="PASS" start="2025-01-16T18:00:11.855502" elapsed="0.158000"/>
+</test>
+<test id="s1-t2" name="Get Unauthorized Response" line="17">
+<kw name="Get Users Without Token" owner="1GET_user">
+<kw name="Run Keyword And Return Status" owner="BuiltIn">
+<kw name="GET" owner="RequestsLibrary">
+<msg time="2025-01-16T18:00:12.145470" level="INFO">GET Request : url=http://18.228.160.85:5000/users 
+ path_url=/users 
+ headers={'User-Agent': 'python-requests/2.32.3', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive'} 
+ body=None 
+ </msg>
+<msg time="2025-01-16T18:00:12.145470" level="INFO">GET Response : url=http://18.228.160.85:5000/users 
+ status=401, reason=Unauthorized 
+ headers={'X-Powered-By': 'Express', 'Access-Control-Allow-Origin': 'http://18.228.160.85:5173', 'Vary': 'Origin', 'Access-Control-Allow-Credentials': 'true', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '25', 'ETag': 'W/"19-1luTU257I9tvKUXOJotGBQDVDqk"', 'Date': 'Thu, 16 Jan 2025 21:00:14 GMT', 'Connection': 'keep-alive', 'Keep-Alive': 'timeout=5'} 
+ body={"error":"Invalid token"} 
+ </msg>
+<msg time="2025-01-16T18:00:12.145470" level="FAIL">HTTPError: 401 Client Error: Unauthorized for url: http://18.228.160.85:5000/users</msg>
+<arg>${BASE_URL}/users</arg>
+<doc>Sends a GET request.</doc>
+<status status="FAIL" start="2025-01-16T18:00:12.014509" elapsed="0.130961">HTTPError: 401 Client Error: Unauthorized for url: http://18.228.160.85:5000/users</status>
+</kw>
+<msg time="2025-01-16T18:00:12.145470" level="INFO">${response} = False</msg>
+<var>${response}</var>
+<arg>GET</arg>
+<arg>${BASE_URL}/users</arg>
+<doc>Runs the given keyword with given arguments and returns the status as a Boolean value.</doc>
+<status status="PASS" start="2025-01-16T18:00:12.014509" elapsed="0.130961"/>
+</kw>
+<kw name="Run Keyword And Expect Error" owner="BuiltIn">
+<kw name="GET" owner="RequestsLibrary">
+<msg time="2025-01-16T18:00:12.295522" level="INFO">GET Request : url=http://18.228.160.85:5000/users 
+ path_url=/users 
+ headers={'User-Agent': 'python-requests/2.32.3', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive'} 
+ body=None 
+ </msg>
+<msg time="2025-01-16T18:00:12.295522" level="INFO">GET Response : url=http://18.228.160.85:5000/users 
+ status=401, reason=Unauthorized 
+ headers={'X-Powered-By': 'Express', 'Access-Control-Allow-Origin': 'http://18.228.160.85:5173', 'Vary': 'Origin', 'Access-Control-Allow-Credentials': 'true', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '25', 'ETag': 'W/"19-1luTU257I9tvKUXOJotGBQDVDqk"', 'Date': 'Thu, 16 Jan 2025 21:00:14 GMT', 'Connection': 'keep-alive', 'Keep-Alive': 'timeout=5'} 
+ body={"error":"Invalid token"} 
+ </msg>
+<msg time="2025-01-16T18:00:12.295522" level="FAIL">HTTPError: 401 Client Error: Unauthorized for url: http://18.228.160.85:5000/users</msg>
+<arg>${BASE_URL}/users</arg>
+<doc>Sends a GET request.</doc>
+<status status="FAIL" start="2025-01-16T18:00:12.145470" elapsed="0.150052">HTTPError: 401 Client Error: Unauthorized for url: http://18.228.160.85:5000/users</status>
+</kw>
+<msg time="2025-01-16T18:00:12.295522" level="INFO">${actual_response} = HTTPError: 401 Client Error: Unauthorized for url: http://18.228.160.85:5000/users</msg>
+<var>${actual_response}</var>
+<arg>HTTPError: 401*</arg>
+<arg>GET</arg>
+<arg>${BASE_URL}/users</arg>
+<doc>Runs the keyword and checks that the expected error occurred.</doc>
+<status status="PASS" start="2025-01-16T18:00:12.145470" elapsed="0.150052"/>
+</kw>
+<return>
+<value>${actual_response}</value>
+<status status="PASS" start="2025-01-16T18:00:12.295522" elapsed="0.000000"/>
+</return>
+<msg time="2025-01-16T18:00:12.300721" level="INFO">${response} = HTTPError: 401 Client Error: Unauthorized for url: http://18.228.160.85:5000/users</msg>
+<var>${response}</var>
+<status status="PASS" start="2025-01-16T18:00:12.014509" elapsed="0.286212"/>
+</kw>
+<kw name="Validate Status Code 401" owner="1GET_user">
+<kw name="Should Contain" owner="BuiltIn">
+<arg>${response}</arg>
+<arg>HTTPError: 401 Client Error: Unauthorized</arg>
+<doc>Fails if ``container`` does not contain ``item`` one or more times.</doc>
+<status status="PASS" start="2025-01-16T18:00:12.300721" elapsed="0.000000"/>
+</kw>
+<arg>${response}</arg>
+<status status="PASS" start="2025-01-16T18:00:12.300721" elapsed="0.000000"/>
+</kw>
+<doc>Testa o comportamento ao não fornecer token de autenticação.</doc>
+<tag>negative</tag>
+<status status="PASS" start="2025-01-16T18:00:12.014509" elapsed="0.286212"/>
+</test>
+<kw name="Suite Teardown" owner="resource" type="TEARDOWN">
+<kw name="Delete All Sessions" owner="RequestsLibrary">
+<msg time="2025-01-16T18:00:12.300721" level="INFO">Deleting All Sessions</msg>
+<doc>Removes all the session objects</doc>
+<status status="PASS" start="2025-01-16T18:00:12.300721" elapsed="0.000000"/>
+</kw>
+<status status="PASS" start="2025-01-16T18:00:12.300721" elapsed="0.000000"/>
+</kw>
+<status status="PASS" start="2025-01-16T18:00:11.429545" elapsed="0.871176"/>
+</suite>
+<statistics>
+<total>
+<stat pass="2" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+<stat pass="1" fail="0" skip="0">negative</stat>
+<stat pass="1" fail="0" skip="0">positive</stat>
+</tag>
+<suite>
+<stat pass="2" fail="0" skip="0" id="s1" name="1GET user">1GET user</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
