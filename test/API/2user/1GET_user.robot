@@ -33,7 +33,7 @@ Get Resource Not Found - user
 Get Bad Request Error - user
     [Documentation]    Status 400 - Simula condições para causar solicitação inválida.
     [Tags]    negative
-    ${response}=    Get users with invalid request error - Status Code 400
+    ${response}=    Get Users With Invalid Request
     Validate Status Code 400    ${response}
 
 # 6 - Erro interno no servidor (500 Internal Server Error)       "Não implementado na API"
@@ -129,57 +129,62 @@ Validate Bad Request Message - user
     ...    - Mensagem de erro específica
     ...    - Estrutura da resposta de erro
     [Tags]    messages    negative
-    ${bad_request_msg}=    Get users with invalid request error - Status Code 400
+    ${bad_request_msg}=    Get Users With Invalid Request
     Should Be Equal    ${bad_request_msg}[error]    Bad Request
     Should Be Equal    ${bad_request_msg}[message]    Expected property name or '}' in JSON at position 1
     Should Be Equal    ${bad_request_msg}[statusCode]    ${400}
 
 ### TODOS OS TESTES DE PERFORMANCE ###
 
-# 15 - Tempo de resposta para listagem de usuários
+# 15 - Tempo de resposta para listagem de usuários (SLA: 1s)
 Validate Get Users Response Time - user
     [Documentation]    Verifica se o tempo de resposta da listagem de usuários está dentro do SLA.
-    ...    Valida:
-    ...    - Tempo de resposta menor que 1 segundo
-    ...    - Status code 200
-    ...    - Resposta com conteúdo válido
-    [Tags]    performance    positive
-    ${start_time}=    Get Time    epoch
-    ${response}=    Get Users
-    ${end_time}=    Get Time    epoch
-    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    ...    
+    ...    Passos do teste:
+    ...    1. Executa requisição GET /users
+    ...    2. Calcula o tempo de resposta
+    ...    3. Valida se está dentro do SLA (1 segundo)
+    ...    4. Verifica status code e conteúdo
+    ...
+    ...    SLA esperado: 1 segundo
+    [Tags]    performance    positive    sla_1s
     
-    Validate Response Time    ${response_time}
+    ${response}    ${response_time}=    Get Response Time For Users List
+    Validate Response Time    ${response_time}    1
     Status Should Be    200    ${response}
     Validate Response Has Content    ${response}
 
-# 16 - Tempo de resposta para usuário específico
+# 16 - Tempo de resposta para usuário específico (SLA: 0.8s)
 Validate Get Single User Response Time - user
     [Documentation]    Verifica se o tempo de resposta ao buscar um usuário específico está dentro do SLA.
-    ...    Valida:
-    ...    - Tempo de resposta menor que 0.8 segundos
-    ...    - Status code 404 (usando ID inexistente para teste)
-    [Tags]    performance    negative
-    ${start_time}=    Get Time    epoch
-    ${response}=    Get Non Existent User
-    ${end_time}=    Get Time    epoch
-    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    ...    
+    ...    Passos do teste:
+    ...    1. Executa requisição GET /users/{id}
+    ...    2. Calcula o tempo de resposta
+    ...    3. Valida se está dentro do SLA (0.8 segundos)
+    ...    4. Verifica mensagem de erro esperada
+    ...
+    ...    SLA esperado: 0.8 segundos
+    [Tags]    performance    negative    sla_0.8s
     
+    ${response}    ${response_time}=    Get Response Time For Single User
     Validate Response Time    ${response_time}    0.8
     Should Be Equal    ${response}[error]    Not Found
 
-# 17 - Tempo de resposta com token inválido
+# 17 - Tempo de resposta com token inválido (SLA: 0.5s)
 Validate Invalid Token Response Time - user
     [Documentation]    Verifica se o tempo de resposta com token inválido está dentro do SLA.
-    ...    Valida:
-    ...    - Tempo de resposta menor que 0.5 segundos
-    ...    - Mensagem de erro apropriada
-    [Tags]    performance    negative
-    ${start_time}=    Get Time    epoch
-    ${response}=    Get Users With Invalid Key
-    ${end_time}=    Get Time    epoch
-    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    ...    
+    ...    Passos do teste:
+    ...    1. Executa requisição com token inválido
+    ...    2. Calcula o tempo de resposta
+    ...    3. Valida se está dentro do SLA (0.5 segundos)
+    ...    4. Verifica mensagem de erro esperada
+    ...
+    ...    SLA esperado: 0.5 segundos
+    [Tags]    performance    negative    sla_0.5s
     
+    ${response}    ${response_time}=    Get Response Time For Invalid Token
     Validate Response Time    ${response_time}    0.5
     Should Be Equal    ${response}    Invalid token
 

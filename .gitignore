@@ -169,3 +169,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Ignorar pasta de logs
+logs/
+*.log
+
+# Outros arquivos comuns para ignorar em projetos Robot Framework
+report.html
+output.xml
+selenium-screenshot-*.png
+debug.log
