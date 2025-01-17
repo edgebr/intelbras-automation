@@ -53,6 +53,7 @@ Library           Collections
 *** Variables ***
 ${BASE_URL}       http://18.228.160.85:5000
 &{HEADERS}        x-api-key=c91f3812554f58600bdecffa4233f8ef397a6c3e42d00489e1b4ed168fb0cbfc
+${INVALID_PERMISSION_TOKEN}    x-api-key=c91f3812554f58600bdecffa4233f8ef397a6c3e42d00489e1b4ed168fb0cbfc2   
 
 
 

@@ -45,6 +45,7 @@ Suite Teardown    Suite Teardown
 # Validate Response Time
 #     [Documentation]    Verifica se o tempo de resposta está dentro do SLA.
 
+#------------------------------------
 
 # # 11 - Paginação
 # Validate Pagination

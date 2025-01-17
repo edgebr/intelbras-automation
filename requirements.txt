@@ -2,3 +2,4 @@ robotframework
 robotframework-requests
 robotframework-operatingsystem
 robotframework-collections
+jsonschema==4.17.3
