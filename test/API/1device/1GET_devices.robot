@@ -45,11 +45,11 @@ Suite Teardown    Suite Teardown
 # Validate Response Time
 #     [Documentation]    Verifica se o tempo de resposta está dentro do SLA.
 
-#------------------------------------
 
 # # 11 - Paginação
 # Validate Pagination
 #     [Documentation]    Verifica o suporte à paginação no endpoint GET.
+
 
 # # 12 - Filtros e parâmetros
 # Validate Filters
@@ -59,9 +59,12 @@ Suite Teardown    Suite Teardown
 # Validate Cache Headers
 #     [Documentation]    Verifica cabeçalhos relacionados a cache na resposta.
 
+
 # # 14 - Diferentes tamanhos de resposta
 # Validate Response Size
 #     [Documentation]    Testa pequenos, médios e grandes conjuntos de dados.
+
+#------------------------------------
 
 # # 15 - Cenários de concorrência
 # Validate Concurrent Requests
@@ -87,6 +90,8 @@ Suite Teardown    Suite Teardown
 # # 20 - Tipos de dados na resposta
 # Validate Response Data Types
 #     [Documentation]    Garante que os campos retornados têm os tipos corretos.
+
+
 
 
 
