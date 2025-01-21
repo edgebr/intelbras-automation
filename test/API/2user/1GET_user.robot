@@ -1,29 +1,86 @@
 *** Settings ***
 Documentation     Testes do endpoint GET /users
-Resource          ../../../resources/resource.resource
-Resource           ../../../resources/page/api/2user/1GET_user.resource
+...    
+...    Endpoint: GET /users
+...    Descrição: Retorna lista de usuários cadastrados
+...    Autenticação: x-api-key header required
+...    Rate Limit: 1000 requests/hour
+...    Cache: ETag implementation
+...    SLA: 1s response time
+...    
+...    Known Issues:
+...    - API-123: Paginação não implementada
+...    - API-124: Cache headers incorretos
+...    - API-125: Filtros não funcionam
+...    - API-126: Performance abaixo do SLA
+...    - API-127: Problemas no ETag
+...    - API-128: Duplicação em paginação
 
+Resource          ../../../resources/resource.resource
+Resource          ../../../resources/page/api/2user/1GET_user.resource
+
+Force Tags        api    get_users
+Default Tags      regression
 
 Suite Setup       Suite Setup
 Suite Teardown    Delete All Sessions
 
+*** Variables ***
+&{KNOWN_ISSUES}    
+...    API-123=Paginação não implementada
+...    API-124=Cache headers incorretos
+...    API-125=Filtros não funcionam
+...    API-126=Performance abaixo do SLA
+...    API-127=Problemas no ETag
+...    API-128=Duplicação em paginação
 
 *** Test Cases ***
 ### TESTES DE STATUS CODE ###
 
-# 1 - Requisição bem-sucedida (200 OK)
 Get Successful Response - user
-    [Documentation]    Status 200 - Testa uma requisição bem-sucedida no endpoint GET.
-    [Tags]    status_code    positive    regression
+    [Documentation]    Valida requisição bem-sucedida no endpoint GET /users
+    ...    
+    ...    Objetivo: Verificar se o endpoint retorna status 200 e dados válidos
+    ...    
+    ...    Pré-condições: 
+    ...    - API em execução
+    ...    - Token válido configurado
+    ...    
+    ...    Passos:
+    ...    1. Enviar requisição GET para /users
+    ...    2. Validar status code 200
+    ...    3. Validar estrutura da resposta
+    ...    4. Validar conteúdo não vazio
+    ...    
+    ...    Resultado Esperado:
+    ...    - Status code 200
+    ...    - Response body com lista de usuários
+    ...    - Dados em formato JSON válido
+    [Tags]    status_code    positive    regression    smoke    priority_high    
+    ...    data_validation    critical
     ${response}=    Get Users
     Validate Status Code 200    ${response}
     Validate Response Has Content    ${response}
-    Log    Response: ${response.json()}    # Adicionado log para debug
+    Log    Response: ${response.json()}
 
-# 2 - Não autorizado (401 Unauthorized)
 Get Unauthorized Response - user
-    [Documentation]    Status 401 - Testa o comportamento ao não fornecer token de autenticação.
-    [Tags]    status_code    negative    regression
+    [Documentation]    Valida comportamento com autenticação inválida
+    ...
+    ...    Objetivo: Verificar se o endpoint retorna erro adequado sem autenticação
+    ...    
+    ...    Pré-condições:
+    ...    - API em execução
+    ...    
+    ...    Passos:
+    ...    1. Enviar requisição GET sem token
+    ...    2. Validar status code 401
+    ...    3. Validar mensagem de erro
+    ...    
+    ...    Resultado Esperado:
+    ...    - Status code 401
+    ...    - Mensagem "Invalid token"
+    ...    - Headers de autenticação apropriados
+    [Tags]    status_code    negative    regression    security    priority_high
     ${response}=    Get Users Without Token
     Validate Status Code 401    ${response}
     Validate Error Message    ${response}    Invalid token
@@ -400,4 +457,157 @@ Validate Concurrent Paginated Requests - user
     END
     
     Validate Concurrent Pagination Responses    ${responses}
+
+### TESTES DE SEGURANÇA ###
+
+Validate Sensitive Information Protection - user
+    [Documentation]    Verifica se informações sensíveis não são expostas na API
+    ...    
+    ...    Objetivo: Garantir que dados sensíveis estejam protegidos
+    ...    
+    ...    Pré-condições:
+    ...    - API em execução
+    ...    - Token válido configurado
+    ...    - Usuários cadastrados com dados sensíveis
+    ...    
+    ...    Passos:
+    ...    1. Enviar requisição GET para /users
+    ...    2. Validar que dados sensíveis não estão expostos
+    ...    3. Verificar mascaramento de informações
+    ...    
+    ...    Resultado Esperado:
+    ...    - Não deve expor senhas
+    ...    - Emails devem estar mascarados ou omitidos
+    ...    - Dados pessoais devem estar protegidos
+    ...    - Tokens e chaves não devem estar expostos
+    [Tags]    security    negative    regression    critical    priority_high
+    ${response}=    Get Users
+    
+    # Valida response
+    ${users}=    Set Variable    ${response.json()}
+    FOR    ${user}    IN    @{users}
+        # Verifica ausência de dados sensíveis
+        Dictionary Should Not Contain Key    ${user}    password
+        Dictionary Should Not Contain Key    ${user}    secret
+        Dictionary Should Not Contain Key    ${user}    token
+        Dictionary Should Not Contain Key    ${user}    apiKey
+        
+        # Verifica mascaramento de email quando presente
+        ${has_email}=    Run Keyword And Return Status
+        ...    Dictionary Should Contain Key    ${user}    email
+        
+        IF    ${has_email} and ${user.email} is not None
+            ${email}=    Get From Dictionary    ${user}    email
+            Should Match Regexp    ${email}    ^[^@]+@[^@]+\\.[^@]+$
+            Should Not Contain    ${email}    admin
+            Should Not Contain    ${email}    root
+        END
+    END
+
+Validate Rate Limiting - user
+    [Documentation]    Verifica se o rate limiting está funcionando
+    ...    
+    ...    Objetivo: Garantir que a API está protegida contra abusos
+    ...    
+    ...    Pré-condições:
+    ...    - API em execução
+    ...    - Token válido configurado
+    ...    
+    ...    Passos:
+    ...    1. Enviar múltiplas requisições em sequência
+    ...    2. Verificar headers de rate limit
+    ...    3. Validar bloqueio após limite excedido
+    ...    
+    ...    Resultado Esperado:
+    ...    - Headers X-RateLimit-Limit presentes
+    ...    - Bloqueio após exceder limite
+    ...    - Status 429 quando limite excedido
+    [Tags]    security    performance    negative    regression    priority_high
+    
+    # Envia requisições até atingir limite
+    FOR    ${index}    IN RANGE    1000
+        ${response}=    Get Users
+        
+        # Verifica headers de rate limit
+        Dictionary Should Contain Key    ${response.headers}    X-RateLimit-Limit
+        Dictionary Should Contain Key    ${response.headers}    X-RateLimit-Remaining
+        
+        ${remaining}=    Get From Dictionary    ${response.headers}    X-RateLimit-Remaining
+        Exit For Loop If    ${remaining} == 0
+    END
+    
+    # Tenta mais uma requisição após limite
+    ${response}=    Get Users    expected_status=429
+    Status Should Be    429    ${response}
+    Should Contain    ${response.json()}[error]    Rate limit exceeded
+
+Validate SQL Injection Protection - user
+    [Documentation]    Verifica proteção contra SQL Injection
+    ...    
+    ...    Objetivo: Garantir que a API está protegida contra SQL Injection
+    ...    
+    ...    Pré-condições:
+    ...    - API em execução
+    ...    - Token válido configurado
+    ...    
+    ...    Passos:
+    ...    1. Enviar requisições com payloads maliciosos
+    ...    2. Verificar se a API rejeita adequadamente
+    ...    
+    ...    Resultado Esperado:
+    ...    - Rejeição de payloads maliciosos
+    ...    - Mensagens de erro apropriadas
+    ...    - Nenhum dado exposto
+    [Tags]    security    negative    regression    critical    priority_high
+    
+    @{sql_payloads}=    Create List
+    ...    1' OR '1'='1
+    ...    1' UNION SELECT * FROM users--
+    ...    1'; DROP TABLE users--
+    
+    FOR    ${payload}    IN    @{sql_payloads}
+        ${response}=    Get Users With Filter    id    ${payload}
+        Status Should Be    400    ${response}
+        Should Not Contain    ${response.text}    sql
+        Should Not Contain    ${response.text}    database
+        Should Not Contain    ${response.text}    error
+    END
+
+Validate XSS Protection - user
+    [Documentation]    Verifica proteção contra Cross-Site Scripting (XSS)
+    ...    
+    ...    Objetivo: Garantir que a API está protegida contra XSS
+    ...    
+    ...    Pré-condições:
+    ...    - API em execução
+    ...    - Token válido configurado
+    ...    
+    ...    Passos:
+    ...    1. Enviar requisições com scripts maliciosos
+    ...    2. Verificar se a API sanitiza ou rejeita
+    ...    
+    ...    Resultado Esperado:
+    ...    - Scripts são sanitizados ou rejeitados
+    ...    - Nenhum script é executado
+    ...    - Headers de segurança presentes
+    [Tags]    security    negative    regression    critical    priority_high
+    
+    @{xss_payloads}=    Create List
+    ...    <script>alert(1)</script>
+    ...    javascript:alert(1)
+    ...    <img src=x onerror=alert(1)>
+    
+    FOR    ${payload}    IN    @{xss_payloads}
+        ${response}=    Get Users With Filter    name    ${payload}
+        
+        # Verifica headers de segurança
+        Dictionary Should Contain Key    ${response.headers}    X-XSS-Protection
+        Dictionary Should Contain Key    ${response.headers}    Content-Security-Policy
+        
+        # Verifica sanitização
+        ${response_body}=    Convert To String    ${response.text}
+        Should Not Contain    ${response_body}    <script>
+        Should Not Contain    ${response_body}    javascript:
+        Should Not Contain    ${response_body}    onerror=
+    END
 

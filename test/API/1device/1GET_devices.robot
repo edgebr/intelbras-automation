@@ -64,7 +64,7 @@ Suite Teardown    Suite Teardown
 # Validate Response Size
 #     [Documentation]    Testa pequenos, médios e grandes conjuntos de dados.
 
-#------------------------------------
+
 
 # # 15 - Cenários de concorrência
 # Validate Concurrent Requests
@@ -74,6 +74,7 @@ Suite Teardown    Suite Teardown
 # Validate Localization
 #     [Documentation]    Testa respostas para diferentes idiomas.
 
+#------------------------------------
 
 # # 17 - Segurança
 # Validate Sensitive Information
