@@ -54,8 +54,7 @@ Library           JSONLibrary
 Library           String
 Library           json
 Library           BuiltIn
-Library           Process           # Para manipulação de processos
-
+Library           Process           
 *** Variables ***
 ${BASE_URL}       http://18.228.160.85:5000
 &{HEADERS}        x-api-key=c91f3812554f58600bdecffa4233f8ef397a6c3e42d00489e1b4ed168fb0cbfc
@@ -63,8 +62,10 @@ ${INVALID_PERMISSION_TOKEN}    x-api-key=c91f3812554f58600bdecffa4233f8ef397a6c3
 
 *** Keywords ***
 Suite Setup
-    Create Session    device    ${BASE_URL}    headers=${HEADERS}
+    # Sessão para testes com autenticação
     Create Session    user    ${BASE_URL}    headers=${HEADERS}
+    # Sessão para testes sem autenticação
+    Create Session    user_no_auth    ${BASE_URL}
 
 Suite Teardown
     Delete All Sessions
@@ -160,7 +161,9 @@ Validate Multiple Types
     [Documentation]    Valida se um valor corresponde a um dos tipos permitidos
     FOR    ${type}    IN    @{allowed_types}
         ${is_valid}=    Validate Single Type    ${value}    ${type}
-        IF    ${is_valid}    RETURN    ${TRUE}
+        IF    ${is_valid}
+            RETURN    ${TRUE}
+        END
     END
     RETURN    ${FALSE}
 

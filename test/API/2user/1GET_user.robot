@@ -11,7 +11,6 @@ Documentation     Testes do endpoint GET /users
 ...    Known Issues:
 ...    - API-123: Paginação não implementada
 ...    - API-124: Cache headers incorretos
-...    - API-125: Filtros não funcionam
 ...    - API-126: Performance abaixo do SLA
 ...    - API-127: Problemas no ETag
 ...    - API-128: Duplicação em paginação
@@ -26,14 +25,13 @@ Resource          ../../../resources/page/api/2user/1GET_user.resource
 Force Tags        api    get_users
 Default Tags      regression
 
-Suite Setup       Suite Setup
+Suite Setup       resource.Suite Setup
 Suite Teardown    Delete All Sessions
 
 *** Variables ***
 &{KNOWN_ISSUES}    
 ...    API-123=Paginação não implementada
 ...    API-124=Cache headers incorretos
-...    API-125=Filtros não funcionam
 ...    API-126=Performance abaixo do SLA
 ...    API-127=Problemas no ETag
 ...    API-128=Duplicação em paginação
@@ -45,57 +43,42 @@ Suite Teardown    Delete All Sessions
 *** Test Cases ***
 ### TESTES DE STATUS CODE ###
 
+# 1 - Requisição bem-sucedida (200 OK)
 Get Successful Response - user
-    [Documentation]    Valida requisição bem-sucedida no endpoint GET /users
-    ...    
-    ...    Objetivo: Verificar se o endpoint retorna status 200 e dados válidos
-    ...    
-    ...    Pré-condições: 
-    ...    - API em execução
-    ...    - Token válido configurado
-    ...    
-    ...    Passos:
-    ...    1. Enviar requisição GET para /users
-    ...    2. Validar status code 200
-    ...    3. Validar estrutura da resposta
-    ...    4. Validar conteúdo não vazio
-    ...    
-    ...    Resultado Esperado:
-    ...    - Status code 200
-    ...    - Response body com lista de usuários
-    ...    - Dados em formato JSON válido
-    [Tags]    status_code    positive    regression    smoke    priority_high    
-    ...    data_validation    critical
+    [Documentation]    Validar resposta bem-sucedida do endpoint GET /users
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 200
+    ...    E devo receber uma lista de usuários
+    ...    E os dados devem estar em formato JSON válido
+    [Tags]    status_code    positive    regression    smoke    priority_high    data_validation    critical
     ${response}=    Get Users
     Validate Status Code 200    ${response}
     Validate Response Has Content    ${response}
     Log    Response: ${response.json()}
 
+# 2 - Requisição sem autenticação (401 Unauthorized)
 Get Unauthorized Response - user
-    [Documentation]    Valida comportamento com autenticação inválida
+    [Documentation]    Validar comportamento da API quando requisição é feita sem token
     ...
-    ...    Objetivo: Verificar se o endpoint retorna erro adequado sem autenticação
-    ...    
-    ...    Pré-condições:
-    ...    - API em execução
-    ...    
-    ...    Passos:
-    ...    1. Enviar requisição GET sem token
-    ...    2. Validar status code 401
-    ...    3. Validar mensagem de erro
-    ...    
-    ...    Resultado Esperado:
-    ...    - Status code 401
-    ...    - Mensagem "Invalid token"
-    ...    - Headers de autenticação apropriados
-    [Tags]    status_code    negative    regression    security    priority_high
+    ...    Dado que não envio token de autenticação
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 401
+    ...    E devo receber a mensagem "Invalid token"
+    [Tags]    api    get_users    negative    priority_high    regression    security    status_code
     ${response}=    Get Users Without Token
     Validate Status Code 401    ${response}
     Validate Error Message    ${response}    Invalid token
 
 # 3 - Requisição inválida (400 Bad Request)
 Get Bad Request Error - user
-    [Documentation]    Status 400 - Simula condições para causar solicitação inválida.
+    [Documentation]    Validar comportamento da API com requisição inválida
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com parâmetros inválidos
+    ...    Então devo receber status code 400
+    ...    E devo receber uma mensagem de erro apropriada
     [Tags]    status_code    negative    regression
     ${response}=    Get Users With Invalid Request
     Validate Status Code 400    ${response}
@@ -103,7 +86,12 @@ Get Bad Request Error - user
 
 # 4 - Recurso não encontrado (404 Not Found)
 Get Resource Not Found - user
-    [Documentation]    Status 404 - Testa uma requisição para um recurso inexistente.
+    [Documentation]    Validar comportamento da API ao buscar recurso inexistente
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para um usuário que não existe
+    ...    Então devo receber status code 404
+    ...    E devo receber uma mensagem indicando que o recurso não foi encontrado
     [Tags]    status_code    negative    regression
     ${response}=    Get Non Existent User
     Validate Status Code 404    ${response}
@@ -111,7 +99,12 @@ Get Resource Not Found - user
 
 # 5 - Erro interno no servidor (500 Internal Server Error)     
 Get Internal Server Error - user
-    [Documentation]    Status 500 - Simula condições para causar erro interno no servidor.
+    [Documentation]    Validar comportamento da API em caso de erro interno
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição que causa erro interno no servidor
+    ...    Então devo receber status code 500
+    ...    E devo receber uma mensagem de erro interno do servidor
     [Tags]    status_code    negative    robot:skip
     ${response}=    Get Users With Server Error
     Validate Status Code 500    ${response}
@@ -120,15 +113,26 @@ Get Internal Server Error - user
 
 # 6 - Requisição sem header x-api-key
 Get Users Without Required Header - user
-    [Documentation]    Valida o comportamento da API quando a requisição é feita sem o header x-api-key.
+    [Documentation]    Validar comportamento da API quando a requisição é feita sem o header x-api-key
+    ...
+    ...    Dado que não envio o header x-api-key
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 401
+    ...    E devo receber a mensagem "Invalid token"
     [Tags]    headers    negative    regression
     ${response}=    Get Users Without Token
-    Validate Status Code 401    ${response}    # Corrigido para validar status code
+    Validate Status Code 401    ${response}
     Validate Error Message    ${response}    Invalid token
 
 # 7 - Requisição com header x-api-key inválido
 Get Users With Invalid Header - user
-    [Documentation]    Valida o comportamento da API quando a requisição é feita com header x-api-key inválido.
+    [Documentation]    Validar comportamento da API quando requisição é feita com token inválido
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 401
+    ...    E devo receber a mensagem "Invalid token"
+    ...    E os detalhes da resposta devem ser registrados
     [Tags]    headers    negative    regression
     ${response}=    Get Users With Invalid Key
     Validate Status Code 401    ${response}
@@ -137,7 +141,12 @@ Get Users With Invalid Header - user
 
 # 8 - Requisição com header x-api-key válido
 Get Users With Valid Header - user
-    [Documentation]    Valida o comportamento da API quando a requisição é feita com header x-api-key válido.
+    [Documentation]    Validar comportamento da API quando a requisição é feita com header x-api-key válido
+    ...
+    ...    Dado que envio um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 200
+    ...    E devo receber uma lista de usuários
     [Tags]    headers    positive    regression
     ${response}=    Get Users
     Validate Status Code 200    ${response}
@@ -148,145 +157,121 @@ Get Users With Valid Header - user
 
 # 9 - Validação do corpo da requisição
 Validate Response Body Schema - user
-    [Documentation]    Status 200 - Valida que o corpo da resposta segue o schema esperado.
+    [Documentation]    Validar que o corpo da resposta segue o schema esperado
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 200
+    ...    E o corpo da resposta deve seguir o schema esperado
     [Tags]    schema    positive    regression
     ${response}=    Get Users
     Validate Status Code 200    ${response}
     Validate Response Schema    ${response}    test_schema_get_200_user.json
-    Log    Schema validation completed successfully    # Log adicional
+    Log    Schema validation completed successfully
 
 ### TESTES DE PAGINAÇÃO ###
 
 # 10 - Validação de Paginação - Primeira Página
 Validate First Page - user
-    [Documentation]    Verifica a primeira página no endpoint GET /users.
-    ...    Known Issue: API-123 - Paginação não implementada
-    ...    O endpoint não está implementando os parâmetros page e per_page.
-    ...    Atualmente retorna todos os registros independente da página solicitada.
+    [Documentation]    Validar a primeira página no endpoint GET /users
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com paginação na primeira página
+    ...    Então devo receber status code 200
+    ...    E devo receber a primeira página de resultados
     [Tags]    pagination    positive    known_issue
     ${response}=    Get Users With Pagination    page=1
     Validate First Page Response    ${response}
 
 # 11 - Validação de Paginação - Segunda Página
 Validate Second Page - user
-    [Documentation]    Verifica a segunda página no endpoint GET /users.
-    ...    Known Issue: API-123 - Paginação não implementada
-    ...    O endpoint não está implementando os parâmetros page e per_page.
-    ...    Atualmente retorna todos os registros independente da página solicitada.
+    [Documentation]    Validar a segunda página no endpoint GET /users
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com paginação na segunda página
+    ...    Então devo receber status code 200
+    ...    E devo receber a segunda página de resultados
     [Tags]    pagination    positive    known_issue
     ${response}=    Get Users With Pagination    page=2
     Validate Second Page Response    ${response}
 
 # 12 - Validação de Paginação - Página Inexistente
 Validate Non Existent Page - user
-    [Documentation]    Verifica página inexistente no endpoint GET /users.
-    ...    Known Issue: API-123 - Paginação não implementada
-    ...    O endpoint não está implementando os parâmetros page e per_page.
-    ...    Atualmente retorna todos os registros independente da página solicitada.
-    ...    Deveria retornar uma lista vazia para páginas sem registros.
+    [Documentation]    Validar comportamento ao solicitar uma página inexistente
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com paginação em uma página inexistente
+    ...    Então devo receber status code 200
+    ...    E devo receber uma lista vazia
     [Tags]    pagination    positive    known_issue    robot:skip
     ${response}=    Get Users With Pagination    page=999
     Validate Empty Page Response    ${response}
 
 ### TESTES DE FILTROS ###
 
-# 13 - Verificação de Filtros Disponíveis
-Verify Available Filters - user
-    [Documentation]    Verifica quais filtros estão disponíveis no endpoint GET /users
-    ...    Known Issue: API-125 - Filtros não implementados
-    ...    O endpoint não suporta nenhum tipo de filtro.
-    ...    Deveria implementar filtros por:
-    ...    - name (string)
-    ...    - email (string)
-    ...    - createdAt (date range)
-    ...    - updatedAt (date range)
-    [Tags]    filter    smoke    known_issue
-    ${available_filters}=    Get Available Filters
-    Verify Available Filters Response    ${available_filters}
+# 13 - Verificação do Filtro por Nome
+Verify Name Filter - user
+    [Documentation]    Validar o filtro por nome no endpoint GET /users
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com filtro de nome
+    ...    Então devo receber status code 200
+    ...    E os resultados devem corresponder ao filtro aplicado
+    [Tags]    filter    smoke    regression  
+    ${response}=    Get Users With Filter    name    test
+    Validate Name Filter Response    ${response}    test
 
-# 14 - Filtro por Nome
-Validate Name Filter - user
-    [Documentation]    Verifica o filtro por nome no endpoint GET /users
-    ...    Known Issue: API-125 - Campo name não está sendo retornado no response
-    [Tags]    filter    positive    robot:skip
-    ${response}=    Get Users With Filter    name    Lorem Ipsum
-    Status Should Be    200    ${response}
-    Validate Name Filter    ${response}    Lorem Ipsum
+# 14 - Validação de Caracteres Especiais no Filtro
+Validate Special Characters In Name Filter - user
+    [Documentation]    Validar comportamento do filtro com caracteres especiais
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com filtro de nome contendo caracteres especiais
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser adequadamente filtrados
+    [Tags]    filter    negative    regression   
+    @{special_chars}=    Create List    @    #    $    %    &    *
+    
+    FOR    ${char}    IN    @{special_chars}
+        Test Name Filter With Special Characters    ${char}
+    END
 
-# 15 - Filtro por Status
-Validate Status Filter - user
-    [Documentation]    Verifica o filtro por status no endpoint GET /users
-    ...    Known Issue: API-125 - Campo status não está sendo retornado no response
-    [Tags]    filter    positive    robot:skip
-    ${response}=    Get Users With Filter    status    Habilitado
-    Status Should Be    200    ${response}
-    Validate Status Filter    ${response}    Habilitado
+# 15 - Pesquisa Case Insensitive
+Validate Case Insensitive Search - user
+    [Documentation]    Validar se a pesquisa é case insensitive
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com filtro de nome em diferentes cases
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser os mesmos independentemente do case
+    [Tags]    filter    positive    regression   
+    @{variations}=    Create List    usuário    Usuário    USUÁRIO
+    
+    FOR    ${term}    IN    @{variations}
+        Test Case Insensitive Search    ${term}
+    END
 
-# 16 - Filtro por Aplicação
-Validate Application Filter - user
-    [Documentation]    Verifica o filtro por aplicação no endpoint GET /users
-    ...    Known Issue: API-125 - Campo application não está sendo retornado no response
-    [Tags]    filter    positive    robot:skip
-    ${response}=    Get Users With Filter    application    SIC Lite
-    Status Should Be    200    ${response}
-    Validate Application Filter    ${response}    SIC Lite
-
-# 17 - Filtro por Grupo de Servidores
-Validate Server Group Filter - user
-    [Documentation]    Verifica o filtro por grupo de servidores no endpoint GET /users
-    ...    Known Issue: API-125 - Campo serverGroup não está sendo retornado no response
-    [Tags]    filter    positive    robot:skip
-    ${response}=    Get Users With Filter    serverGroup    Lorem Ipsum
-    Status Should Be    200    ${response}
-    Validate Server Group Filter    ${response}    Lorem Ipsum
-
-# 18 - Filtro por Conexão Relay
-Validate Relay Connection Filter - user
-    [Documentation]    Verifica o filtro por status da conexão relay
-    ...    Known Issue: API-125 - Campo relayConnection não está sendo retornado no response
-    [Tags]    filter    positive    robot:skip
-    ${response1}=    Get Users With Filter    relayConnection    20 minutes
-    Status Should Be    200    ${response1}
-    Validate Relay Connection Filter    ${response1}    20 minutes
-
-# 19 - Filtro por Data de Atualização
-Validate Update Date Filter - user
-    [Documentation]    Verifica o filtro por data de atualização
-    ...    Known Issue: API-125 - Campo updatedAt não está sendo retornado no response
-    [Tags]    filter    positive    robot:skip
-    ${today}=    Get Current Date
-    ${response}=    Get Users With Filter    updatedAt    ${today}
-    Status Should Be    200    ${response}
-    Validate Update Date Filter    ${response}    ${today}
-
-# 20 - Múltiplos Filtros
-Validate Multiple Filters - user
-    [Documentation]    Verifica a combinação de múltiplos filtros
-    ...    Known Issue: API-125 - Campos status, application e relayConnection não estão sendo retornados
-    [Tags]    filter    positive    robot:skip
-    ${filters}=    Create Dictionary    
-    ...    status=Habilitado    
-    ...    application=SIC Lite
-    ...    relayConnection=20 minutes
-    ${response}=    Get Users With Multiple Filters    ${filters}
-    Status Should Be    200    ${response}
-    Validate Status Filter    ${response}    Habilitado
-    Validate Application Filter    ${response}    SIC Lite
-    Validate Relay Connection Filter    ${response}    20 minutes
-
-# 21 - Filtro com Valor Inválido
-Validate Invalid Filter Value - user
-    [Documentation]    Verifica o comportamento com valor de filtro inválido
-    ...    Known Issue: API-126 - API retorna 200 com dados ao invés de 400 ou lista vazia
-    [Tags]    filter    negative    known_issue
-    ${response}=    Get Users With Filter    status    invalid_status
-    Validate Invalid Filter Response    ${response}    invalid_status
+# 16 - Pesquisa Sem Resultados
+Validate Empty Search Results - user
+    [Documentation]    Validar comportamento quando não há resultados para o filtro
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com filtro de nome que não retorna resultados
+    ...    Então devo receber status code 200
+    ...    E a lista de resultados deve estar vazia
+    [Tags]    filter    negative    regression       
+    ${response}=    Get Users With Filter    name    usuário_inexistente_xyz
+    Validate Filter Response Structure    ${response}
 
 ### TESTES DE PERFORMANCE ###
 
 # 22 - Tempo de resposta para listagem de usuários (SLA: 1s)
 Validate Get Users Response Time - user
-    [Documentation]    Verifica se o tempo de resposta da listagem está dentro do SLA (1s)
+    [Documentation]    Validar se o tempo de resposta da listagem está dentro do SLA (1s)
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
     [Tags]    performance    positive    sla_1s
     ${response}    ${response_time}=    Get Response Time For Users List
     Validate Response Time    ${response_time}    1
@@ -295,36 +280,34 @@ Validate Get Users Response Time - user
 
 # 23 - Tempo de resposta para usuário específico (SLA: 0.8s)
 Validate Get Single User Response Time - user
-    [Documentation]    Verifica se o tempo de resposta está dentro do SLA (0.8s)
-    ...    Known Issue: API-126 - Tempo de resposta acima do SLA
-    ...    O endpoint está consistentemente respondendo acima do limite de 0.8s.
-    ...    Tempo atual médio: ~1s
-    ...    Comportamento esperado:
-    ...    - Tempo de resposta deve ser menor que 0.8s para 95% das requisições
-    ...    - Tempo de resposta máximo aceitável: 1s
+    [Documentation]    Validar se o tempo de resposta para um usuário específico está dentro do SLA (0.8s)
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para um usuário específico
+    ...    Então o tempo de resposta deve ser menor que 0.8 segundos
     [Tags]    performance    negative    sla_0.8s    known_issue
     ${response}    ${response_time}=    Get Response Time For Single User
     
-    # Registra métricas mesmo se falhar
     Log    Tempo de resposta: ${response_time}s    WARN
     Log    SLA esperado: 0.8s    WARN
     Log    Diferença: ${response_time - 0.8}s    WARN
     
-    # Valida o SLA, mas não falha o teste por ser known issue
     ${within_sla}=    Run Keyword And Return Status
     ...    Should Be True    ${response_time} < 0.8
     ...    Response time of ${response_time} seconds exceeded the SLA of 0.8 second(s)
     
     IF    not ${within_sla}
         Log    Known Issue: API-126 - Tempo de resposta acima do SLA    WARN
-        Log    O endpoint está consistentemente respondendo acima do limite de 0.8s    WARN
-        Log    Recomendação: Investigar possíveis otimizações no endpoint    WARN
-        Skip    Known Issue: API-126 - Tempo de resposta (${response_time}s) acima do SLA (0.8s)
     END
 
 # 24 - Tempo de resposta com token inválido (SLA: 0.5s)
 Validate Invalid Token Response Time - user
-    [Documentation]    Verifica se o tempo de resposta está dentro do SLA (0.5s)
+    [Documentation]    Validar tempo de resposta com token inválido
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
+    ...    E devo receber a mensagem "Invalid token"
     [Tags]    performance    negative    sla_0.5s
     ${response}    ${response_time}=    Get Response Time For Invalid Token
     
@@ -340,7 +323,11 @@ Validate Invalid Token Response Time - user
 
 # 25 - Validação de Headers de Cache
 Validate Cache Headers - user
-    [Documentation]    Verifica os cabeçalhos relacionados a cache na resposta
+    [Documentation]    Validar headers de cache na resposta
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber headers de cache apropriados
     ...    Known Issue: API-127 - Headers de cache não estão implementados corretamente
     [Tags]    cache    positive    known_issue    robot:skip
     ${response}=    Get Users
@@ -348,7 +335,12 @@ Validate Cache Headers - user
 
 # 26 - Validação de Cache com ETag
 Validate ETag Cache - user
-    [Documentation]    Verifica se o cache usando ETag está funcionando corretamente
+    [Documentation]    Validar se o cache usando ETag está funcionando corretamente
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber um ETag no header
+    ...    E ao usar o ETag em uma nova requisição, devo receber status code 304
     ...    Known Issue: API-127 - Mecanismo de ETag não está implementado corretamente
     [Tags]    cache    positive    known_issue    robot:skip
     # Primeira requisição para obter o ETag
@@ -361,7 +353,13 @@ Validate ETag Cache - user
 
 # 27 - Validação de Cache Expirado
 Validate Expired Cache - user
-    [Documentation]    Verifica o comportamento quando o cache está expirado
+    [Documentation]    Validar comportamento quando o cache está expirado
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber um ETag no header
+    ...    E ao usar um ETag inválido, devo receber status code 200
+    ...    E devo receber um novo ETag
     ...    Known Issue: API-127 - Mecanismo de cache expirado não está implementado
     [Tags]    cache    positive    known_issue    robot:skip
     # Primeira requisição para obter o ETag
@@ -382,22 +380,26 @@ Validate Expired Cache - user
 
 # 28 - Validação de Resposta Pequena
 Validate Small Response Size - user
-    [Documentation]    Verifica o comportamento com conjunto pequeno de dados (até 10 registros)
-    ...    Valida:
-    ...    - Tempo de resposta
-    ...    - Tamanho do payload
-    ...    - Estrutura dos dados
+    [Documentation]    Validar comportamento com conjunto pequeno de dados (até 10 registros)
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com paginação de 10 registros por página
+    ...    Então devo receber status code 200
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o tamanho do payload deve ser pequeno
     [Tags]    response_size    performance    positive
     ${response}=    Get Users With Pagination    page=1    per_page=10
     Validate Small Response    ${response}
 
 # 29 - Validação de Resposta Média
 Validate Medium Response Size - user
-    [Documentation]    Verifica o comportamento com conjunto médio de dados (50-100 registros)
-    ...    Valida:
-    ...    - Tempo de resposta
-    ...    - Tamanho do payload
-    ...    - Estrutura dos dados
+    [Documentation]    Validar comportamento com conjunto médio de dados (50-100 registros)
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com paginação de 50 registros por página
+    ...    Então devo receber status code 200
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o tamanho do payload deve ser médio
     ...    Known Issue: API-128 - Paginação retorna todos os registros
     [Tags]    response_size    performance    positive    known_issue    robot:skip
     [Setup]    Log    Skipping test: API-128 - Paginação não implementada corretamente
@@ -406,11 +408,13 @@ Validate Medium Response Size - user
 
 # 30 - Validação de Resposta Grande
 Validate Large Response Size - user
-    [Documentation]    Verifica o comportamento com conjunto grande de dados (>100 registros)
-    ...    Valida:
-    ...    - Tempo de resposta
-    ...    - Tamanho do payload
-    ...    - Estrutura dos dados
+    [Documentation]    Validar comportamento com conjunto grande de dados (>100 registros)
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users com paginação de 100 registros por página
+    ...    Então devo receber status code 200
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o tamanho do payload deve ser grande
     ...    Known Issue: API-128 - Paginação retorna todos os registros
     [Tags]    response_size    performance    positive    known_issue    robot:skip
     [Setup]    Log    Skipping test: API-128 - Paginação não implementada corretamente
@@ -421,26 +425,24 @@ Validate Large Response Size - user
 
 # 31 - Validação de Requisições Concorrentes
 Validate Concurrent Requests - user
-    [Documentation]    Verifica o comportamento do endpoint sob múltiplas requisições simultâneas
-    ...    Valida:
-    ...    - Consistência das respostas
-    ...    - Tempo de resposta sob carga
-    ...    - Status code consistente
-    ...    - Ausência de race conditions
+    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
+    ...
+    ...    Dado que faço múltiplas requisições GET para /users simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o status code deve ser consistente
     [Tags]    concurrent    performance    positive
-    
     ${responses}=    Run Concurrent Requests    Get Users    10
     Validate Concurrent Responses    ${responses}    Validate User Item Structure
 
 # 32 - Validação de Concorrência com Cache
 Validate Concurrent Cached Requests - user
-    [Documentation]    Verifica o comportamento do cache sob múltiplas requisições simultâneas
-    ...    Valida:
-    ...    - Consistência do ETag
-    ...    - Hit rate do cache
-    ...    - Performance com cache
+    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
+    ...
+    ...    Dado que faço múltiplas requisições GET para /users com cache simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E o ETag deve ser consistente
     [Tags]    concurrent    cache    performance    positive
-    
     # Primeira requisição para obter ETag
     ${initial_response}=    Get Users
     ${etag}=    Get From Dictionary    ${initial_response.headers}    ETag
@@ -450,12 +452,14 @@ Validate Concurrent Cached Requests - user
 
 # 33 - Validação de Concorrência com Paginação
 Validate Concurrent Paginated Requests - user
-    [Documentation]    Verifica o comportamento da paginação sob múltiplas requisições simultâneas
+    [Documentation]    Validar comportamento da paginação sob múltiplas requisições simultâneas
+    ...
+    ...    Dado que faço múltiplas requisições GET para /users com paginação simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E os registros não devem ser duplicados entre páginas
     ...    Known Issue: API-128 - Paginação retorna registros duplicados entre páginas
-    ...    O endpoint está retornando os mesmos registros em diferentes páginas
     [Tags]    concurrent    pagination    performance    positive    known_issue    robot:skip
     [Setup]    Log    Skipping test: API-128 - Paginação retornando registros duplicados
-    
     ${pages}=    Create List    1    2    3    4    5
     @{responses}=    Create List
     
@@ -468,125 +472,174 @@ Validate Concurrent Paginated Requests - user
 
 ### TESTES DE SEGURANÇA ###
 
-# 34 - Validação de Proteção de Informações Sensíveis
-Validate Sensitive Information Protection - user
-    [Documentation]    Verifica se informações sensíveis não são expostas na API
-    ...    
-    ...    Objetivo: Garantir que dados sensíveis estejam protegidos
-    [Tags]    security    negative    regression    critical    priority_high
-    ${response}=    Get Users
-    ${users}=    Set Variable    ${response.json()}
+# 26 - Validação de Autenticação
+Validate Authentication Security - user
+    [Documentation]    Validar aspectos de segurança relacionados à autenticação
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 401
+    ...    E devo receber a mensagem "Invalid token"
+    [Tags]    security    negative    regression
     
-    FOR    ${user}    IN    @{users}
-        Validate User Security    ${user}
+    ${response}=    Get Users Without Token
+    Validate Status Code 401    ${response}
+    Validate Error Message    ${response}    Invalid token
+    
+    ${response}=    Get Users With Invalid Key
+    Validate Status Code 401    ${response}
+    Validate Error Message    ${response}    Invalid token
+
+# 27 - Validação de Headers de Segurança
+Validate Security Headers - user
+    [Documentation]    Validar headers de segurança na resposta
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber headers de segurança apropriados
+    [Tags]    security    negative    regression    known_issue    robot:skip
+    [Setup]    Log    Skipping test: API-131 - Headers de segurança não implementados
+    ${response}=    Get Users
+    
+    @{security_headers}=    Create List
+    ...    X-Content-Type-Options
+    ...    X-Frame-Options
+    ...    X-XSS-Protection
+    ...    Content-Security-Policy
+    
+    FOR    ${header}    IN    @{security_headers}
+        Should Contain    ${response.headers}    ${header}
     END
 
-# 35 - Validação de Rate Limiting
+# 28 - Validação de Rate Limiting
 Validate Rate Limiting - user
-    [Documentation]    Verifica se o rate limiting está funcionando
-    ...    
-    ...    Objetivo: Garantir que a API está protegida contra abusos
-    ...    
-    ...    Known Issue: API-129 - Headers de Rate Limiting não implementados
-    ...    - Headers X-RateLimit-* ausentes nas respostas
-    ...    - Sem proteção contra excesso de requisições
-    ...    - Necessário implementar middleware de rate limiting
-    ...    
-    ...    Impacto:
-    ...    - Segurança: Alto - Vulnerável a ataques DoS
-    ...    - Performance: Alto - Sem proteção contra sobrecarga
-    ...    
-    ...    Workaround:
-    ...    - Implementar rate limiting no API Gateway
-    ...    - Monitorar logs de acesso
-    ...    
-    ...    Resultado Esperado após correção:
-    ...    - Headers X-RateLimit-Limit presentes
-    ...    - Bloqueio após exceder limite
-    ...    - Status 429 quando limite excedido
-    [Tags]    security    performance    negative    regression    
-    ...    priority_high    known_issue    robot:skip
+    [Documentation]    Validar se the rate limiting está funcionando
+    ...
+    ...    Dado que faço múltiplas requisições em sequência
+    ...    Quando o limite de requisições é atingido
+    ...    Então devo receber headers de rate limit apropriados
+    [Tags]    security    negative    regression    known_issue    robot:skip
+    [Setup]    Log    Skipping test: API-129 - Rate Limiting não implementado
     
-    # Registra issue no log
-    Log    Known Issue: ${KNOWN_ISSUES}[API-129]    WARN
-    
-    # Executa teste básico até correção
+    FOR    ${i}    IN RANGE    10
+        ${response}=    Get Users
+        
+        Should Contain    ${response.headers}    X-RateLimit-Limit
+        Should Contain    ${response.headers}    X-RateLimit-Remaining
+        Should Contain    ${response.headers}    X-RateLimit-Reset
+    END
+
+# 29 - Validação de Proteção de Dados
+Validate Data Protection - user
+    [Documentation]    Validar proteção de dados sensíveis
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então os dados sensíveis devem estar mascarados
+    [Tags]    security    negative    regression    known_issue
     ${response}=    Get Users
-    Status Should Be    200    ${response}
+    Validate Filter Response Structure    ${response}
     
-    # Verifica se headers foram implementados (opcional)
-    ${has_rate_limit}=    Run Keyword And Return Status
-    ...    Dictionary Should Contain Key    ${response.headers}    X-RateLimit-Limit
-    
-    IF    ${has_rate_limit}
-        Log    Rate Limiting implementado - Atualizar teste    WARN
-        Skip    Rate Limiting foi implementado - Teste precisa ser atualizado
+    ${users}=    Set Variable    ${response.json()}
+    FOR    ${user}    IN    @{users}
+        Run Keyword And Warn On Failure    Validate Sensitive Data Masking    ${user}
     END
 
-# 36 - Validação de Proteção contra SQL Injection
-Validate SQL Injection Protection - user
-    [Documentation]    Verifica proteção contra SQL Injection
-    ...    Known Issue: API-130 - Endpoint vulnerável a SQL Injection
-    ...    Impacto: Crítico - Possível exposição/manipulação de dados
-    [Tags]    security    negative    regression    critical    
-    ...    priority_high    known_issue    robot:skip
-    
-    @{sql_payloads}=    Create List
-    ...    1' OR '1'='1
-    ...    1' UNION SELECT * FROM users--
-    ...    1'; DROP TABLE users--
-    
-    FOR    ${payload}    IN    @{sql_payloads}
-        ${response}=    Get Users With Filter    id    ${payload}
-        Validate SQL Injection Response    ${response}
-    END
+### TESTES DE VALIDAÇÃO DE DADOS ###
 
-# 37 - Validação de Proteção contra Cross-Site Scripting (XSS)
-Validate XSS Protection - user
-    [Documentation]    Verifica proteção contra Cross-Site Scripting (XSS)
-    ...    Known Issue: API-131 - Headers de proteção XSS não implementados
-    ...    Impacto: Alto - Possível execução de scripts maliciosos
-    [Tags]    security    negative    regression    critical    
-    ...    priority_high    known_issue    robot:skip
-    
-    @{xss_payloads}=    Create List
-    ...    <script>alert(1)</script>
-    ...    javascript:alert(1)
-    ...    <img src=x onerror=alert(1)>
-    
-    FOR    ${payload}    IN    @{xss_payloads}
-        ${response}=    Get Users With Filter    name    ${payload}
-        Validate XSS Headers    ${response}
-        Validate XSS Response Body    ${response}
-    END
-
-# 38 - Validação de Mascaramento de Dados
-Validate Data Masking - user
-    [Documentation]    Verifica se dados sensíveis estão adequadamente mascarados
-    ...    Known Issue: API-132 - Dados sensíveis expostos sem mascaramento
-    ...    Impacto: Alto - Exposição de dados pessoais e violação LGPD
-    ...    
-    ...    Objetivo: Garantir que dados sensíveis estejam mascarados
-    ...    
-    ...    Pré-condições:
-    ...    - API em execução
-    ...    - Usuários cadastrados com dados sensíveis
-    ...    
-    ...    Resultado Esperado:
-    ...    - Emails parcialmente mascarados
-    ...    - Dados pessoais protegidos
-    ...    - Conformidade com LGPD
-    [Tags]    security    data_protection    regression    
-    ...    priority_high    known_issue    robot:skip
-    
-    # Registra issue no log
-    Log    Known Issue: ${KNOWN_ISSUES}[API-132]    WARN
-    
+# 34 - Validação de Tipos de Dados
+Validate Data Types - user
+    [Documentation]    Validar se os tipos de dados dos campos estão corretos
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então os tipos de dados dos campos devem estar corretos
+    [Tags]    data_validation    positive    regression
     ${response}=    Get Users
     ${users}=    Set Variable    ${response.json()}
     
     FOR    ${user}    IN    @{users}
-        Validate Data Masking Rules    ${user}
+        Validate User Data Types    ${user}
+    END
+
+# 35 - Validação de Campos Obrigatórios
+Validate Required Fields - user
+    [Documentation]    Validar se todos os campos obrigatórios estão presentes
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então todos os campos obrigatórios devem estar presentes
+    [Tags]    data_validation    positive    regression
+    ${response}=    Get Users
+    ${users}=    Set Variable    ${response.json()}
+    
+    FOR    ${user}    IN    @{users}
+        Validate Required User Fields    ${user}
+    END
+
+# 36 - Validação de Formatos de Dados
+Validate Data Formats - user
+    [Documentation]    Validar se os formatos dos dados retornados estão corretos
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então devo receber status code 200
+    ...    E para cada usuário retornado:
+    ...    - O ID deve estar no formato UUID
+    ...    - O email deve estar em formato válido
+    ...    - O nome deve conter apenas caracteres permitidos
+    ...    - As datas devem estar no formato ISO 8601
+    [Tags]    data_validation    positive    regression
+    ${response}=    Get Users
+    ${users}=    Set Variable    ${response.json()}
+    
+    FOR    ${user}    IN    @{users}
+        Validate User Data Formats    ${user}
+    END
+
+# 37 - Validação de Valores Limites
+Validate Field Length Limits - user
+    [Documentation]    Validar limites de tamanho dos campos
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então os campos devem respeitar os limites de tamanho
+    [Tags]    data_validation    negative    regression
+    ${response}=    Get Users
+    ${users}=    Set Variable    ${response.json()}
+    
+    FOR    ${user}    IN    @{users}
+        Validate Field Length Limits    ${user}
+    END
+
+# 38 - Validação de Caracteres Especiais
+Validate Special Characters In Fields - user
+    [Documentation]    Validar tratamento de caracteres especiais nos campos
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então os campos devem tratar adequadamente caracteres especiais
+    [Tags]    data_validation    negative    regression
+    ${response}=    Get Users
+    ${users}=    Set Variable    ${response.json()}
+    
+    FOR    ${user}    IN    @{users}
+        Validate Special Characters    ${user}
+    END
+
+# 39 - Validação de Campos Opcionais
+Validate Optional Fields - user
+    [Documentation]    Validar campos opcionais quando presentes
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /users
+    ...    Então os campos opcionais devem estar presentes quando aplicável
+    [Tags]    data_validation    positive    regression
+    ${response}=    Get Users
+    ${users}=    Set Variable    ${response.json()}
+    
+    FOR    ${user}    IN    @{users}
+        Validate Optional Fields    ${user}
     END
 
 

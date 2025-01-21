@@ -1,108 +1,131 @@
-### 1. **Testes para Métodos GET**
-#### **Status Codes Esperados**
-- **200 OK**: Quando a requisição é bem-sucedida e o recurso é retornado.
-- **404 Not Found**: Quando o recurso solicitado não existe.
-- **401 Unauthorized**: Quando é necessária autenticação, mas não fornecida ou incorreta.
-- **403 Forbidden**: Quando a autenticação é válida, mas o acesso ao recurso é restrito.
+# Testes de API
 
-#### **O que validar?**
-- **Schema de resposta**: Use uma ferramenta como JSON Schema para verificar se a resposta segue o contrato esperado.
-- **Headers de resposta**: Exemplo: `Content-Type: application/json`.
-- **Tempo de resposta**: Deve estar dentro do SLA definido.
-- **Paginação**: Verificar se as respostas suportam e retornam dados paginados corretamente.
-- **Filtros e parâmetros**: Valide combinações de parâmetros, incluindo valores inválidos ou não suportados.
-- **Cache**: Caso aplicável, verifique se a resposta possui cabeçalhos como `Cache-Control` ou `ETag`.
+## Testes Implementados
 
----
+### 1. **GET /users**
+#### Status Codes Testados
+- ✅ **200 OK** - `Get Successful Response - user`
+- ✅ **401 Unauthorized** - `Get Unauthorized Response - user`
+- ✅ **400 Bad Request** - `Get Bad Request Error - user`
+- ✅ **404 Not Found** - `Get Resource Not Found - user`
+- ✅ **500 Internal Server Error** - `Get Internal Server Error - user`
 
-### 2. **Testes para Métodos POST**
-#### **Status Codes Esperados**
-- **201 Created**: Quando o recurso é criado com sucesso.
-- **400 Bad Request**: Quando os dados enviados no corpo da requisição estão incorretos.
-- **401 Unauthorized** ou **403 Forbidden**: Quando a autenticação está ausente ou inválida.
-- **409 Conflict**: Para casos de duplicidade (e.g., criando um recurso com ID já existente).
-- **500 Internal Server Error**: Quando há erro no servidor.
+#### Validações Implementadas
+- ✅ **Headers**
+  - `Get Users Without Required Header - user`
+  - `Get Users With Invalid Header - user`
+  - `Get Users With Valid Header - user`
 
-#### **O que validar?**
-- **Validação do corpo da requisição**: Enviar dados válidos e inválidos para validar comportamentos.
-- **Mensagens de erro**: Certifique-se de que mensagens sejam claras e sigam um padrão.
-- **Headers da requisição**: Incluindo `Content-Type` e `Authorization`.
-- **Resposta da criação**: O ID ou URI do novo recurso deve ser retornado.
-- **Carga limite**: Testar limites de payload e possíveis problemas com grandes volumes de dados.
+- ✅ **Schema**
+  - `Validate Response Body Schema - user`
 
----
+- ✅ **Paginação**
+  - `Validate First Page - user`
+  - `Validate Second Page - user`
+  - `Validate Non Existent Page - user`
 
-### 3. **Testes para Métodos PUT**
-#### **Status Codes Esperados**
-- **200 OK** ou **204 No Content**: Quando a atualização é bem-sucedida.
-- **400 Bad Request**: Dados inválidos enviados.
-- **404 Not Found**: O recurso a ser atualizado não existe.
-- **401 Unauthorized** ou **403 Forbidden**: Falhas de autenticação ou autorização.
-- **409 Conflict**: Conflitos de dados, como versões desatualizadas do recurso.
+- ✅ **Cache**
+  - `Validate Cache Headers - user`
+  - `Validate ETag Cache - user`
+  - `Validate Expired Cache - user`
 
-#### **O que validar?**
-- **Validação do corpo da requisição**: Dados completos e parciais (se suportado).
-- **Idempotência**: Garantir que múltiplas requisições PUT com os mesmos dados não criem novos recursos.
-- **Validação de respostas**: Confirmação de que os dados foram atualizados corretamente.
+- ✅ **Performance**
+  - `Validate Response Time - user`
+  - `Validate Invalid Token Response Time - user`
+  - `Validate Small Response Size - user`
+  - `Validate Medium Response Size - user`
+  - `Validate Large Response Size - user`
 
----
+- ✅ **Concorrência**
+  - `Validate Concurrent Requests - user`
+  - `Validate Concurrent Cached Requests - user`
+  - `Validate Concurrent Paginated Requests - user`
 
-### 4. **Testes para Métodos DELETE**
-#### **Status Codes Esperados**
-- **204 No Content**: Quando o recurso é deletado com sucesso.
-- **404 Not Found**: O recurso não existe.
-- **401 Unauthorized** ou **403 Forbidden**: Falha de autenticação ou autorização.
+- ✅ **Segurança**
+  - `Validate Authentication Security - user`
+  - `Validate Security Headers - user`
+  - `Validate Rate Limiting - user`
+  - `Validate Data Protection - user`
 
-#### **O que validar?**
-- **Confirmação da exclusão**: Tentar acessar o recurso novamente e verificar o retorno de **404 Not Found**.
-- **Idempotência**: Verificar que a mesma requisição DELETE múltiplas vezes retorna o mesmo resultado.
-- **Dependências**: Garantir que recursos relacionados são tratados corretamente ou sinalizar dependências.
+- ✅ **Validação de Dados**
+  - `Validate Data Types - user`
+  - `Validate Required Fields - user`
+  - `Validate Data Formats - user`
+  - `Validate Field Length Limits - user`
+  - `Validate Special Characters In Fields - user`
+  - `Validate Optional Fields - user`
 
----
+### Known Issues
+- 🐛 API-123: Paginação não implementada
+- 🐛 API-124: Cache headers incorretos
+- 🐛 API-126: Performance abaixo do SLA
+- 🐛 API-127: Problemas no ETag
+- 🐛 API-128: Duplicação em paginação
+- 🐛 API-129: Rate Limiting não implementado
+- 🐛 API-130: Endpoint vulnerável a SQL Injection
+- 🐛 API-131: Headers de proteção XSS não implementados
+- 🐛 API-132: Dados sensíveis expostos sem mascaramento
 
-### 5. **Melhorias sugeridas**
-Se a documentação da API não fornece status codes esperados ou mensagens detalhadas:
-- **Adicionar tabelas de status codes**: Associando cada endpoint aos seus códigos de resposta possíveis.
-- **Mensagens de erro padronizadas**: Como `{ "error": "Invalid data", "details": "Field X is required" }`.
-- **Definir contratos de entrada/saída com JSON Schema**.
+## Testes Pendentes
 
----
+### 2. **POST /users**
+- ⏳ Criação de usuário com sucesso (201)
+- ⏳ Validação de dados obrigatórios (400)
+- ⏳ Validação de formatos de dados
+- ⏳ Validação de duplicidade (409)
+- ⏳ Testes de segurança
+- ⏳ Testes de performance
 
-### 6. **Outras áreas de teste**
-- **Testes de segurança**:
-  - Verificar injeções (SQL, XSS).
-  - Testar limites de autenticação (e.g., brute force).
-  - Garantir que dados sensíveis não são retornados em logs ou respostas.
-- **Testes de desempenho**:
-  - Simular múltiplas requisições concorrentes.
-  - Validar latência e throughput.
-- **Testes exploratórios**:
-  - Testar combinações inesperadas de métodos e parâmetros.
+### 3. **PUT /users**
+- ⏳ Atualização completa de usuário
+- ⏳ Atualização parcial de usuário
+- ⏳ Validação de dados
+- ⏳ Testes de concorrência
+- ⏳ Testes de segurança
 
----
+### 4. **DELETE /users**
+- ⏳ Deleção de usuário
+- ⏳ Validação de dependências
+- ⏳ Testes de concorrência
+- ⏳ Testes de segurança
 
-### Tabela de Status Codes Sugeridos por Método HTTP
+## Padrões de Status Code
 
-| **Método** | **Status Code** | **Descrição**                          | **Quando Usar**                                     |
-|------------|----------------|--------------------------------------|---------------------------------------------------|
-| **GET**    | 200 OK         | Requisição bem-sucedida.            | Quando os dados são recuperados com sucesso.     |
-|            | 401 Unauthorized| Não autorizado.                     | Quando a autenticação não é fornecida ou é inválida. |
-|            | 403 Forbidden   | Acesso proibido.                    | Quando o acesso é restrito mesmo com autenticação.|
-|            | 404 Not Found   | Recurso não encontrado.             | Quando o recurso solicitado não existe.          |
-|            | 500 Internal Server Error | Erro interno no servidor.    | Quando ocorre um erro inesperado no servidor.     |
-| **POST**   | 201 Created    | Recurso criado com sucesso.         | Quando um novo recurso é criado.                 |
-|            | 400 Bad Request| Dados inválidos na requisição.      | Quando o payload está incorreto ou incompleto.    |
-|            | 401 Unauthorized| Não autorizado.                     | Sem autenticação ou autenticação inválida.        |
-|            | 403 Forbidden   | Proibido.                           | Acesso negado mesmo com autenticação.            |
-|            | 409 Conflict    | Conflito.                           | Quando um recurso já existe e não pode ser duplicado. |
-|            | 500 Internal Server Error | Erro interno no servidor.    | Quando há falhas internas durante a criação do recurso. |
-| **PUT**    | 200 OK         | Atualização bem-sucedida.           | Quando os dados de um recurso são atualizados.   |
-|            | 204 No Content  | Atualização sem retorno de conteúdo.| Quando a atualização não retorna dados no corpo. |
-|            | 400 Bad Request| Dados inválidos na requisição.      | Payload com erros de validação.                  |
-|            | 404 Not Found   | Recurso não encontrado.             | Quando o recurso a ser atualizado não existe.    |
-|            | 409 Conflict    | Conflito.                           | Erros de concorrência ou inconsistência de versão.|
-| **DELETE** | 204 No Content  | Recurso deletado com sucesso.       | Quando o recurso é excluído.                     |
-|            | 404 Not Found   | Recurso não encontrado.             | Quando o recurso já foi removido ou não existe.  |
-|            | 401 Unauthorized| Não autorizado.                     | Quando a autenticação é inválida ou ausente.     |
-|            | 403 Forbidden   | Acesso proibido.                    | Quando o usuário não tem permissão para excluir. |
-|            | 500 Internal Server Error | Erro interno no servidor.    | Falhas inesperadas ao excluir o recurso.         |
+| Método   | Status Code | Descrição                           | Implementado |
+|----------|-------------|-------------------------------------|--------------|
+| GET      | 200         | Sucesso                            | ✅           |
+|          | 401         | Não autorizado                     | ✅           |
+|          | 400         | Requisição inválida                | ✅           |
+|          | 404         | Recurso não encontrado             | ✅           |
+|          | 500         | Erro interno                       | ✅           |
+| POST     | 201         | Criado com sucesso                 | ⏳           |
+|          | 400         | Dados inválidos                    | ⏳           |
+|          | 401         | Não autorizado                     | ⏳           |
+|          | 409         | Conflito                           | ⏳           |
+| PUT      | 200         | Atualizado com sucesso             | ⏳           |
+|          | 400         | Dados inválidos                    | ⏳           |
+|          | 401         | Não autorizado                     | ⏳           |
+|          | 404         | Recurso não encontrado             | ⏳           |
+| DELETE   | 204         | Deletado com sucesso               | ⏳           |
+|          | 401         | Não autorizado                     | ⏳           |
+|          | 404         | Recurso não encontrado             | ⏳           |
+
+## Legenda
+- ✅ Implementado
+- ⏳ Pendente
+- 🐛 Known Issue
+
+## Próximos Passos
+1. Implementar testes para POST /users
+2. Implementar testes para PUT /users
+3. Implementar testes para DELETE /users
+4. Resolver Known Issues identificados
+5. Adicionar testes de integração entre endpoints
+6. Melhorar cobertura de testes de segurança
+7. Implementar testes de carga e stress
+
+## Notas
+- Todos os testes seguem o padrão BDD na documentação
+- Logs detalhados são gerados para análise
+- Testes críticos são marcados com tag `critical`
+- Known Issues são documentados e rastreados

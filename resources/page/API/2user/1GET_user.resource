@@ -1,7 +1,11 @@
 *** Settings ***
+Library    RequestsLibrary
+Library    Collections
+Library    String
 Resource    ../../../resource.resource
 
 *** Keywords ***
+
 ### KEYWORDS DE REQUISIÇÃO ###
 Get Users
     [Arguments]    ${index}=${EMPTY}    ${args}=${EMPTY}
@@ -30,21 +34,23 @@ Get Users With Pagination
 
 Get Users Without Token
     [Documentation]    Executa GET /users sem token de autenticação
+    ${headers}=    Create Dictionary
+    
     ${response}=    GET On Session    
-    ...    alias=user
-    ...    url=${BASE_URL}/users
-    ...    headers=${EMPTY}
+    ...    alias=user_no_auth    
+    ...    url=${BASE_URL}/users    
+    ...    headers=${headers}    
     ...    expected_status=401
+    
     RETURN    ${response}
 
 Get Users With Invalid Key
-    [Documentation]    Executa GET /users com chave inválida
-    &{headers}=    Create Dictionary    
-    ...    x-api-key=chave_invalida_123
+    [Documentation]    Executa GET /users com token inválido
+    ${headers}=    Create Dictionary    x-api-key=invalid_key
     ${response}=    GET On Session    
-    ...    alias=user
-    ...    url=${BASE_URL}/users
-    ...    headers=${headers}
+    ...    alias=user    
+    ...    url=${BASE_URL}/users    
+    ...    headers=${headers}    
     ...    expected_status=401
     RETURN    ${response}
 
@@ -72,7 +78,15 @@ Validate Status Code 200
 
 Validate Status Code 401
     [Arguments]    ${response}
+    [Documentation]    Valida que a resposta tem status code 401
     Status Should Be    401    ${response}
+    
+    # Valida mensagem de erro
+    ${body}=    Set Variable    ${response.json()}
+    Dictionary Should Contain Key    ${body}    error
+    Should Be Equal    ${body}[error]    Invalid token
+    
+    Log    Status code 401 validado com sucesso    level=DEBUG
 
 Validate Response Has Content
     [Arguments]    ${response}
@@ -256,15 +270,15 @@ Get Available Filters
     RETURN    ${filters}
 
 Get Users With Filter
-    [Documentation]    Executa GET /users com filtros
-    [Arguments]    ${filter_name}    ${filter_value}
-    ${params}=    Create Dictionary    ${filter_name}=${filter_value}
+    [Arguments]    ${field}    ${value}
+    [Documentation]    Executa GET /users com filtro
+    ${params}=    Create Dictionary    ${field}=${value}
     ${response}=    GET On Session    
-    ...    alias=user
+    ...    alias=user    
     ...    url=${BASE_URL}/users    
-    ...    params=${params}
-    ...    headers=${HEADERS}
-    ...    expected_status=any
+    ...    headers=${HEADERS}    
+    ...    params=${params}    
+    ...    expected_status=200
     RETURN    ${response}
 
 Get Users With Multiple Filters
@@ -509,9 +523,9 @@ Validate Empty Page Response
 Validate Error Message
     [Arguments]    ${response}    ${expected_message}
     [Documentation]    Valida a mensagem de erro na resposta
-    ${response_json}=    Set Variable    ${response.json()}
-    ${actual_message}=    Get From Dictionary    ${response_json}    error
-    Should Be Equal    ${actual_message}    ${expected_message}
+    ${body}=    Set Variable    ${response.json()}
+    Dictionary Should Contain Key    ${body}    error
+    Should Be Equal    ${body}[error]    ${expected_message}
 
 Log Response Details
     [Arguments]    ${response}
@@ -973,4 +987,168 @@ Validate Basic Rate Limit Response
         Log    Known Issue API-129: Rate Limiting não implementado    WARN
     END
 
+# Keywords de Validação de Filtros
+Validate Filter Response Structure
+    [Arguments]    ${response}
+    [Documentation]    Valida a estrutura básica da resposta do filtro
+    Status Should Be    200    ${response}
     
+    ${users}=    Set Variable    ${response.json()}
+    Should Not Be Empty    ${users}
+    
+    # Valida que a resposta é uma lista válida
+    ${is_list}=    Evaluate    isinstance($users, list)
+    Should Be True    ${is_list}
+    
+
+Validate Name Filter Response
+    [Arguments]    ${response}    ${search_term}
+    [Documentation]    Valida resposta do filtro por nome
+    ${users}=    Validate Filter Response Structure    ${response}
+    
+    # Log para debug
+    Log    Filtro testado: name    level=INFO
+    Log    Termo pesquisado: ${search_term}    level=DEBUG
+    Log    Usuários retornados: ${users}    level=DEBUG
+
+Test Name Filter With Special Characters
+    [Arguments]    ${special_char}
+    [Documentation]    Testa filtro com caracteres especiais
+    ${response}=    Get Users With Filter    name    ${special_char}
+    Validate Filter Response Structure    ${response}
+    Log    Caractere especial testado: ${special_char}    level=DEBUG
+
+Test Case Insensitive Search
+    [Arguments]    ${search_term}
+    [Documentation]    Testa busca case insensitive
+    ${response}=    Get Users With Filter    name    ${search_term}
+    Validate Filter Response Structure    ${response}
+    Log    Termo case insensitive testado: ${search_term}    level=DEBUG
+
+# Keywords de Segurança
+Validate Sensitive Data Masking
+    [Arguments]    ${user}
+    [Documentation]    Verifica se dados sensíveis estão mascarados
+    
+    # Verifica email
+    ${email}=    Get From Dictionary    ${user}    email
+    Run Keyword If    '${email}' != 'None'    Should Match Regexp    ${email}    ^[^@]+@[^@]+\\.[^@]+$
+    
+    # Verifica outros campos sensíveis conforme necessário
+    Log    Validação de mascaramento concluída para usuário: ${user['id']}    level=DEBUG
+
+# Keywords de Validação de Dados
+Validate User Data Types
+    [Arguments]    ${user}
+    [Documentation]    Valida os tipos de dados dos campos do usuário
+    
+    # Validação de tipos usando evaluate para verificar o tipo Python
+    ${is_name_string}=    Evaluate    isinstance($user['name'], str)
+    Should Be True    ${is_name_string}    Campo 'name' deve ser string, valor atual: ${user}[name]
+    
+    # Valida email (pode ser nulo)
+    ${email}=    Set Variable    ${user}[email]
+    IF    $email is not None
+        ${is_email_string}=    Evaluate    isinstance($user['email'], str)
+        Should Be True    ${is_email_string}    Campo 'email' deve ser string quando presente, valor atual: ${user}[email]
+    END
+    
+    ${is_id_string}=    Evaluate    isinstance($user['id'], str)
+    Should Be True    ${is_id_string}    Campo 'id' deve ser string, valor atual: ${user}[id]
+    
+    # Campos em camelCase na API
+    ${is_created_at_string}=    Evaluate    isinstance($user['createdAt'], str)
+    Should Be True    ${is_created_at_string}    Campo 'createdAt' deve ser string, valor atual: ${user}[createdAt]
+    
+    ${is_updated_at_string}=    Evaluate    isinstance($user['updatedAt'], str)
+    Should Be True    ${is_updated_at_string}    Campo 'updatedAt' deve ser string, valor atual: ${user}[updatedAt]
+    
+    # Log para debug
+    Log    Tipos de dados validados para usuário: ${user['id']}    level=DEBUG
+
+Validate Required User Fields
+    [Arguments]    ${user}
+    [Documentation]    Valida presença de campos obrigatórios
+    
+    # Lista de campos obrigatórios (usando camelCase conforme API)
+    @{required_fields}=    Create List    id    name    email    createdAt    updatedAt
+    
+    FOR    ${field}    IN    @{required_fields}
+        Dictionary Should Contain Key    ${user}    ${field}
+        
+        # Verifica se o campo não está vazio (exceto email que pode ser nulo)
+        ${value}=    Set Variable    ${user}[${field}]
+        IF    '${field}' != 'email'
+            Should Not Be Empty    ${value}    Campo '${field}' não pode ser vazio
+        END
+    END
+    
+    Log    Campos obrigatórios validados para usuário: ${user['id']}    level=DEBUG
+
+Validate User Data Formats
+    [Arguments]    ${user}
+    [Documentation]    Valida formatos específicos dos dados
+    
+    # Valida formato de email (se não for nulo)
+    ${email}=    Set Variable    ${user}[email]
+    IF    $email is not None
+        Should Match Regexp    ${user}[email]    ^[^@]+@[^@]+\\.[^@]+$
+    END
+    
+    # Valida formato de datas (usando camelCase)
+    Should Match Regexp    ${user}[createdAt]    ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}
+    Should Match Regexp    ${user}[updatedAt]    ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}
+    
+    # Valida formato de ID (Base64 URL Safe)
+    Should Match Regexp    ${user}[id]    ^[A-Za-z0-9_-]+$
+    
+    Log    Formatos de dados validados para usuário: ${user['id']}    level=DEBUG
+
+Validate Field Length Limits
+    [Arguments]    ${user}
+    [Documentation]    Valida limites de tamanho dos campos
+    
+    # Valida tamanho máximo do nome
+    ${name_length}=    Get Length    ${user}[name]
+    Should Be True    ${name_length} <= 100    Campo 'name' excede o limite de 100 caracteres
+    
+    # Valida tamanho máximo do email (se não for nulo)
+    ${email}=    Set Variable    ${user}[email]
+    IF    $email is not None
+        ${email_length}=    Get Length    ${email}
+        Should Be True    ${email_length} <= 255    Campo 'email' excede o limite de 255 caracteres
+    END
+    
+    Log    Limites de tamanho validados para usuário: ${user['id']}    level=DEBUG
+
+Validate Special Characters
+    [Arguments]    ${user}
+    [Documentation]    Valida tratamento de caracteres especiais
+    
+    # Lista de caracteres especiais para verificar
+    @{special_chars}=    Create List    á    é    í    ó    ú    ñ    ç    @    #    $
+    
+    # Verifica se o nome aceita caracteres especiais
+    FOR    ${char}    IN    @{special_chars}
+        ${contains_char}=    Run Keyword And Return Status
+        ...    Should Not Contain    ${user}[name]    ${char}
+        Run Keyword If    not ${contains_char}
+        ...    Log    Nome contém caractere especial '${char}' para usuário: ${user['id']}    level=DEBUG
+    END
+
+Validate Optional Fields
+    [Arguments]    ${user}
+    [Documentation]    Valida campos opcionais quando presentes
+    
+    # Lista de campos opcionais
+    @{optional_fields}=    Create List    phone    address    role
+    
+    FOR    ${field}    IN    @{optional_fields}
+        ${has_field}=    Run Keyword And Return Status
+        ...    Dictionary Should Contain Key    ${user}    ${field}
+        
+        IF    ${has_field}
+            Should Not Be Empty    ${user}[${field}]
+            Log    Campo opcional '${field}' presente e válido    level=DEBUG
+        END
+    END

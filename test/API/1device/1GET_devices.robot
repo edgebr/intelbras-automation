@@ -77,7 +77,7 @@ Documentation     Testes do endpoint GET /devices
 # Validate Localization
 #     [Documentation]    Testa respostas para diferentes idiomas.
 
-#------------------------------------
+
 
 # # 17 - Segurança
 # Validate Sensitive Information
@@ -86,6 +86,7 @@ Documentation     Testes do endpoint GET /devices
 # # 18 - Valores nulos ou padrão
 # Validate Default Values
 #     [Documentation]    Testa comportamento com valores omitidos.
+
 
 # # 19 - Desconexão de rede
 # Validate Network Failure
