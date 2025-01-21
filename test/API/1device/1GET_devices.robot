@@ -2,6 +2,9 @@
 Resource  ../../../resources/resource.resource
 Suite Setup    Suite Setup
 Suite Teardown    Suite Teardown
+Documentation     Testes do endpoint GET /devices
+...    Known Issues:
+...    - API-132: Dados sensíveis expostos sem mascaramento (compartilhado com /users)
 
 *** Variables ***
 

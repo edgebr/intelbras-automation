@@ -868,4 +868,109 @@ Validate Concurrent Pagination Responses
         END
     END
 
+### KEYWORDS DE VALIDAÇÃO DE SEGURANÇA ###
+Validate User Security
+    [Arguments]    ${user}
+    # Verifica ausência de dados sensíveis
+    Dictionary Should Not Contain Key    ${user}    password
+    Dictionary Should Not Contain Key    ${user}    secret
+    Dictionary Should Not Contain Key    ${user}    token
+    Dictionary Should Not Contain Key    ${user}    apiKey
+    
+    # Verifica mascaramento de email quando presente
+    Validate Email Security    ${user}
+
+Validate Email Security
+    [Arguments]    ${user}
+    ${has_email}=    Run Keyword And Return Status
+    ...    Dictionary Should Contain Key    ${user}    email
+    
+    IF    ${has_email}
+        ${email}=    Get From Dictionary    ${user}    email
+        ${is_email_none}=    Run Keyword And Return Status
+        ...    Should Be Equal    ${email}    ${None}
+        
+        IF    not ${is_email_none}
+            Should Match Regexp    ${email}    ^[^@]+@[^@]+\\.[^@]+$
+            Should Not Contain    ${email}    admin
+            Should Not Contain    ${email}    root
+        END
+    END
+
+Validate Rate Limit Headers
+    [Arguments]    ${response}
+    Dictionary Should Contain Key    ${response.headers}    X-RateLimit-Limit
+    Dictionary Should Contain Key    ${response.headers}    X-RateLimit-Remaining
+    ${remaining}=    Get From Dictionary    ${response.headers}    X-RateLimit-Remaining
+    RETURN    ${remaining}
+
+Validate SQL Injection Response
+    [Arguments]    ${response}
+    Status Should Be    400    ${response}
+    Should Not Contain    ${response.text}    sql
+    Should Not Contain    ${response.text}    database
+    Should Not Contain    ${response.text}    error
+
+Validate XSS Headers
+    [Arguments]    ${response}
+    Dictionary Should Contain Key    ${response.headers}    X-XSS-Protection
+    Dictionary Should Contain Key    ${response.headers}    Content-Security-Policy
+
+Validate XSS Response Body
+    [Arguments]    ${response}
+    ${response_body}=    Convert To String    ${response.text}
+    Should Not Contain    ${response_body}    <script>
+    Should Not Contain    ${response_body}    javascript:
+    Should Not Contain    ${response_body}    onerror=
+
+Validate Data Masking Rules
+    [Arguments]    ${user}
+    [Documentation]    Validação temporária de mascaramento de dados
+    ...    Known Issue: API-132
+    
+    # Valida mascaramento de email quando presente
+    ${has_email}=    Run Keyword And Return Status
+    ...    Dictionary Should Contain Key    ${user}    email
+    
+    IF    ${has_email}
+        ${email}=    Get From Dictionary    ${user}    email
+        ${is_email_none}=    Run Keyword And Return Status
+        ...    Should Be Equal    ${email}    ${None}
+        
+        IF    not ${is_email_none}
+            # Verifica formato básico de email até implementação do mascaramento
+            Should Match Regexp    ${email}    ^[^@]+@[^@]+\\.[^@]+$
+            Should Not Contain    ${email}    admin
+            Should Not Contain    ${email}    root
+            Log    Known Issue API-132: Email não mascarado: ${email}    WARN
+        END
+    END
+    
+    # Valida outros dados sensíveis
+    ${name}=    Get From Dictionary    ${user}    name
+    Should Not Contain Any    ${name}    
+    ...    CPF    RG    SSN    CNPJ    
+    ...    Passport    License
+    
+    # Log para auditoria
+    Log    Verificando dados sensíveis para usuário: ${user}[id]    DEBUG
+
+Validate Basic Rate Limit Response
+    [Arguments]    ${response}
+    [Documentation]    Validação básica de rate limiting
+    ...    Usado temporariamente enquanto API-129 não é corrigida
+    Status Should Be    200    ${response}
+    
+    # Verifica se algum header de rate limit existe
+    ${headers}=    Get Dictionary Keys    ${response.headers}
+    ${rate_limit_headers}=    Get Matches    ${headers}    *rate*    case_insensitive=True
+    
+    # Registra headers encontrados
+    IF    ${rate_limit_headers}
+        Log    Headers de Rate Limit encontrados: ${rate_limit_headers}    WARN
+        Log    Atualizar teste: API-129 pode ter sido corrigida    WARN
+    ELSE
+        Log    Known Issue API-129: Rate Limiting não implementado    WARN
+    END
+
     

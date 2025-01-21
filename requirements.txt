@@ -1,7 +1,7 @@
 robotframework>=6.1.1
 robotframework-requests>=0.9.5
-robotframework-jsonlibrary>=0.5
-robotframework-jsonschemalibrary>=1.0.2
+robotframework-jsonlibrary
+robotframework-jsonschemalibrary
 robotframework-operatingsystem>=1.1
 robotframework-collections>=1.0.0
 jsonschema>=4.17.3
