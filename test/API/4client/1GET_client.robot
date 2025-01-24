@@ -49,7 +49,7 @@ Get Unauthorized Response - client
     ...    Quando faço uma requisição GET para /clients
     ...    Então devo receber status code 401
     ...    E devo receber a mensagem "Invalid token"
-    [Tags]    api    get_users    negative    priority_high    regression    security    status_code    GET-2
+    [Tags]    api    get_clients    negative    priority_high    regression    security    status_code    GET-2
     ${response}=    Get Clients Without Token
     Validate Status Code 401 - client    ${response}
     Validate Error Message - client    ${response}    Invalid token
