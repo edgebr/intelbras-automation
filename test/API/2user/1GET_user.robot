@@ -19,7 +19,6 @@ Documentation     Testes do endpoint GET /users
 ...    - API-131: Headers de proteção XSS não implementados
 ...    - API-132: Dados sensíveis expostos sem mascaramento
 
-Resource          ../../../resources/resource.resource
 Resource          ../../../resources/page/api/2user/1GET_user.resource
 
 Force Tags        api    get_users
