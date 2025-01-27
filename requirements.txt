@@ -4,7 +4,7 @@ robotframework==6.1.1
 # Bibliotecas essenciais
 robotframework-requests==0.9.5
 robotframework-jsonlibrary==0.5
-robotframework-jsonschemalibrary==1.0.2
+robotframework-jsonschema==0.5
 robotframework-databaselibrary==1.2.4
 
 # Bibliotecas de suporte
@@ -20,4 +20,3 @@ PyYAML==6.0.1
 # Bibliotecas para validação
 jsonpath-ng==1.5.3
 jsonpointer==2.4
-rpaframework==27.1.0
