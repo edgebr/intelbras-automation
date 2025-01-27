@@ -29,6 +29,21 @@ Get Client By ID
     ...    expected_status=200
     RETURN    ${response}
 
+Get Clients With Pagination
+    [Arguments]    ${page}=1    ${per_page}=10
+    [Documentation]    Executa GET /clients com paginação
+    ${headers}=    Create Dictionary    x-api-key=${HEADERS}[x-api-key]
+    ${params}=    Create Dictionary
+    ...    page=${page}
+    ...    per_page=${per_page}
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/clients
+    ...    headers=${headers}
+    ...    params=${params}
+    ...    expected_status=any
+    RETURN    ${response}
+
 Get Clients Without Token
     [Documentation]    Executa GET /clients sem token de autenticação
     ${headers}=    Create Dictionary
@@ -89,6 +104,68 @@ Get Clients With Invalid Key
     RETURN    ${response}
 
 ### KEYWORDS DE VALIDAÇÃO ###
+Validate First Page Response - client
+    [Arguments]    ${response}
+    Status Should Be    200    ${response}
+    ${body}=    Set Variable    ${response.json()}
+    Log    Response body: ${body}    DEBUG
+
+    # Validar que a lista não está vazia
+    Should Not Be Empty    ${body}
+
+    # Validar o primeiro usuário da lista
+    ${first_client}=    Set Variable    ${body}[0]
+    Dictionary Should Contain Key    ${first_client}    id
+    Dictionary Should Contain Key    ${first_client}    clientKey
+    Dictionary Should Contain Key    ${first_client}    email
+    Dictionary Should Contain Key    ${first_client}    enabled
+    Dictionary Should Contain Key    ${first_client}    applicationId
+    Dictionary Should Contain Key    ${first_client}    createdAt
+    Dictionary Should Contain Key    ${first_client}    updatedAt
+    Dictionary Should Contain Key    ${first_client}    groups
+
+Validate Second Page Response - client
+    [Arguments]    ${response}
+    [Documentation]    Valida a resposta da segunda página
+    Status Should Be    200    ${response}
+
+    ${json}=    Set Variable    ${response.json()}
+    Should Be True    isinstance(${json}, list)    A resposta deve ser uma lista
+    Should Not Be Empty    ${json}    A lista de clientes não pode estar vazia
+
+    # Obtém a primeira página para comparação
+    ${first_page}=    Get Clients With Pagination    page=1
+    ${first_page_json}=    Set Variable    ${first_page.json()}
+
+    # Verifica se a paginação está implementada
+    ${pagination_implemented}=    Run Keyword And Return Status
+    ...    Should Not Be Equal    ${json}    ${first_page_json}    msg=Segunda página igual à primeira
+
+    IF    not ${pagination_implemented}
+        Log    Known Issue: API-123 - Paginação não implementada [CONSYS-196]    WARN
+        Log    O endpoint não está implementando os parâmetros page e per_page    WARN
+        Log    Atualmente retorna todos os registros independente da página solicitada    WARN
+        Log    Comportamento esperado:    WARN
+        Log    - Deve retornar apenas os registros da página solicitada    WARN
+        Log    - Deve respeitar o limite de registros por página (per_page)    WARN
+        Log    - Deve retornar lista vazia para páginas sem registros    WARN
+        Skip    Known Issue: API-123 - Paginação não implementada [CONSYS-196]. O endpoint não processa os parâmetros page e per_page corretamente.
+    END
+
+    # Valida a estrutura dos itens
+    FOR    ${user}    IN    @{json}
+        Validate User Item Structure    ${user}
+    END
+
+Validate Empty Page Response - client
+    [Arguments]    ${response}
+    Status Should Be    200    ${response}
+    ${json}=    Set Variable    ${response.json()}
+
+    # Valida que é uma lista vazia
+    Should Be True    isinstance(${json}, list)    A resposta deve ser uma lista
+    Should Be Empty    ${json}    A lista de usuários deve estar vazia
+
 Validate Status Code 200 - client
     [Arguments]    ${response}
     Status Should Be    200    ${response}

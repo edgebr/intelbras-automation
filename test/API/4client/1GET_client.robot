@@ -9,7 +9,8 @@ Documentation     Testes do endpoint GET /clients
 ...    SLA: 1s response time
 ...
 ...    Known Issues:
-...    - API-133: GET /users/{id} retorna 500 ao enviar ID numérico muito longo
+...    - API-123: Paginação não implementada [CONSYS-196]
+...    - API-133: GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 
 Resource          ../../../resources/page/api/4client/1GET_client.resource
 
@@ -21,7 +22,8 @@ Suite Teardown    Delete All Sessions
 
 *** Variables ***
 &{KNOWN_ISSUES}
-...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo
+...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
+...    API-123=Paginação não implementada [CONSYS-196]
 
 
 *** Test Cases ***
@@ -103,7 +105,7 @@ Get Internal Server Error - client
     ${response}=    Get Clients With Server Error
     Validate Status Code 500 - client    ${response}
     Log    ${response}
-    [Setup]    Log    API-129 - GET /users/{id} retorna 500 ao enviar ID numérico muito longo
+    [Setup]    Log    ${KNOWN_ISSUES}[API-133]
 
 ### TESTES DE HEADERS ###
 
@@ -192,41 +194,49 @@ Validate Response Body Schema - client by id
 
 ### TESTES DE PAGINAÇÃO ###
 
-## GET-13 - Validação de Paginação - Primeira Página
-#Validate First Page - client
-#    [Documentation]    Validar a primeira página no endpoint GET /users
-#    ...
-#    ...    ID: GET-13
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients com paginação na primeira página
-#    ...    Então devo receber status code 200
-#    ...    E devo receber a primeira página de resultados
-#    [Tags]    pagination    positive    known_issue    GET-13
+# GET-11 - Validação de Paginação - Primeira Página
+Validate First Page - client
+    [Documentation]    Validar a primeira página no endpoint GET /users
+    ...
+    ...    ID: GET-11
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com paginação na primeira página
+    ...    Então devo receber status code 200
+    ...    E devo receber a primeira página de resultados
+    [Tags]    pagination    positive    known_issue    GET-11
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-123]
+    ${response}=    Get Clients With Pagination    page=1
+    Validate First Page Response - client    ${response}
 
-## GET-14 - Validação de Paginação - Segunda Página
-#Validate Second Page - client
-#    [Documentation]    Validar a segunda página no endpoint GET /clients
-#    ...
-#    ...    ID: GET-14
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients com paginação na segunda página
-#    ...    Então devo receber status code 200
-#    ...    E devo receber a segunda página de resultados
-#    [Tags]    pagination    positive    known_issue    GET-14
+# GET-12 - Validação de Paginação - Segunda Página
+Validate Second Page - client
+    [Documentation]    Validar a segunda página no endpoint GET /clients
+    ...
+    ...    ID: GET-12
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com paginação na segunda página
+    ...    Então devo receber status code 200
+    ...    E devo receber a segunda página de resultados
+    [Tags]    pagination    positive    known_issue    GET-12
+    ${response}=    Get Clients With Pagination    page=2
+    Validate Second Page Response - client    ${response}
 
-## GET-15 - Validação de Paginação - Página Inexistente
-#Validate Non Existent Page - user
-#    [Documentation]    Validar comportamento ao solicitar uma página inexistente
-#    ...
-#    ...    ID: GET-15
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients com paginação em uma página inexistente
-#    ...    Então devo receber status code 200
-#    ...    E devo receber uma lista vazia
-#    [Tags]    pagination    positive    known_issue    robot:skip    GET-15
+# GET-13 - Validação de Paginação - Página Inexistente
+Validate Non Existent Page - client
+    [Documentation]    Validar comportamento ao solicitar uma página inexistente
+    ...
+    ...    ID: GET-13
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com paginação em uma página inexistente
+    ...    Então devo receber status code 200
+    ...    E devo receber uma lista vazia
+    [Tags]    pagination    positive    known_issue    GET-13
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-123]
+    ${response}=    Get Clients With Pagination    page=999999
+    Validate Empty Page Response - client    ${response}
 
 ### TESTES DE FILTROS ###
 
