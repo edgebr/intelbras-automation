@@ -36,18 +36,19 @@ jobs:
       run: |
         echo "Current directory:"
         pwd
-        echo "\nRepository contents:"
-        ls -la
-        echo "\nTest directory:"
-        ls -la test/api/
+        echo "\nTest directory structure:"
+        ls -R test/api/
         
-    - name: Run GET Tests
+    - name: Run Device Tests
       run: |
-        robot \
-          --outputdir logs \
-          --exclude robot:skip \
-          test/api/1device/1GET_devices.robot \
-          test/api/2user/1GET_user.robot
+        robot -d ./logs test/api/1device/1GET_devices.robot
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_KEY: ${{ secrets.API_KEY }}
+
+    - name: Run User Tests
+      run: |
+        robot -d ./logs test/api/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
