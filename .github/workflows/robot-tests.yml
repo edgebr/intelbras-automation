@@ -29,29 +29,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Create necessary directories
-      run: |
-        mkdir -p test/api/1device
-        mkdir -p test/api/2user
-        mkdir -p resources/page/api/1device
-        mkdir -p resources/page/api/2user
+    - name: Create logs directory
+      run: mkdir -p logs
         
     - name: Debug - List directory structure
       run: |
         echo "Current working directory:"
         pwd
-        ls -R
+        echo "List test directories:"
+        ls -la ./test/API/1device/
+        ls -la ./test/API/2user/
         
     - name: Run Device Tests
       run: |
-        robot -d ./logs ./test/api/1device/1GET_devices.robot || robot -d ./logs ./tests/api/1device/1GET_devices.robot
+        robot -d ./logs ./test/API/1device/1GET_devices.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
 
     - name: Run User Tests
       run: |
-        robot -d ./logs ./test/api/2user/1GET_user.robot || robot -d ./logs ./tests/api/2user/1GET_user.robot
+        robot -d ./logs ./test/API/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
