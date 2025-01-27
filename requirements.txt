@@ -4,7 +4,6 @@ robotframework==6.1.1
 # Bibliotecas essenciais
 robotframework-requests==0.9.5
 robotframework-jsonlibrary==0.5
-robotframework-jsonschema==0.5
 robotframework-databaselibrary==1.2.4
 
 # Bibliotecas de suporte
