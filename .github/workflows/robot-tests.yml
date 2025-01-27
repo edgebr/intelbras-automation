@@ -38,16 +38,16 @@ jobs:
         pwd
         echo "\nRepository contents:"
         ls -la
-        echo "\nResources directory:"
-        ls -la resources/page/api/
+        echo "\nTest directory:"
+        ls -la test/api/
         
     - name: Run GET Tests
       run: |
         robot \
           --outputdir logs \
           --exclude robot:skip \
-          resources/page/api/1device/1GET_devices.resource \
-          resources/page/api/2user/1GET_user.resource
+          test/api/1device/1GET_devices.robot \
+          test/api/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
