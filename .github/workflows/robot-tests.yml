@@ -36,20 +36,19 @@ jobs:
       run: |
         echo "Current working directory:"
         pwd
-        echo "List test directories:"
-        ls -la ./test/API/1device/
-        ls -la ./test/API/2user/
+        echo "Full directory structure:"
+        ls -R
         
     - name: Run Device Tests
       run: |
-        robot -d ./logs ./test/API/1device/1GET_devices.robot
+        robot --pythonpath . -d ./logs ./test/API/1device/1GET_devices.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
 
     - name: Run User Tests
       run: |
-        robot -d ./logs ./test/API/2user/1GET_user.robot
+        robot --pythonpath . -d ./logs ./test/API/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
@@ -65,5 +64,6 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: logs/output.xml
+        files: "logs/*.xml"
+        format: "junit"
         report_individual_runs: true 
