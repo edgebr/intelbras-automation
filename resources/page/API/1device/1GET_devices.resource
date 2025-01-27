@@ -1,10 +1,13 @@
 *** Settings ***
 Library    RequestsLibrary
 Library    Collections
+Library    JSONLibrary
 Resource    ../../../resource.resource
 
 *** Variables ***
 ${DEVICE_ENDPOINT}    ${BASE_URL}/devices
+${SCHEMA_DIR}    ${CURDIR}/../../../json
+${SCHEMA_PATH}    ${CURDIR}/../../../json/GET_DEVICES/test_schema_get_200_device.json
 
 *** Keywords ***
 Get Devices
@@ -84,9 +87,13 @@ Get Device Internal Server Error
 Validate Device Status Code 500
     [Arguments]    ${response}
     [Documentation]    Valida que o código de status é 500 e as mensagens de erro
-    Should Be Equal    ${response}[error]    Internal Server Error
-    Should Be Equal    ${response}[message]    An unexpected error occurred
-    Should Be Equal    ${response}[statusCode]    ${500}
+    ${status_code}=    Convert To String    ${response.status_code}
+    Should Be Equal As Strings    ${status_code}    500
+    
+    ${response_json}=    Set Variable    ${response.json()}
+    Should Be Equal    ${response_json}[error]    Internal Server Error
+    Should Be Equal    ${response_json}[message]    An unexpected error occurred
+    Should Be Equal    ${response_json}[statusCode]    ${500}
 
 Get Device By Serial Id
     [Arguments]    ${serialId}
@@ -131,3 +138,131 @@ Get And Store Serial Id
     ${response_json}=    Set Variable    ${response.json()}
     ${first_device}=    Set Variable    ${response_json}[0]
     Set Suite Variable    ${STORED_SERIAL_ID}    ${first_device}[serialId]
+
+Get Devices Without Api Key
+    [Documentation]    Executa GET /devices sem o header x-api-key
+    ${headers}=    Create Dictionary    Content-Type=application/json
+    ${response}=    GET On Session    
+    ...    alias=device_no_auth    # Mudando para usar a sessão sem autenticação
+    ...    url=${DEVICE_ENDPOINT}    
+    ...    headers=${headers}    
+    ...    expected_status=401
+    RETURN    ${response}
+
+Validate Device Status Code 401
+    [Arguments]    ${response}
+    [Documentation]    Valida que o código de status é 401 e as mensagens de erro
+    ${status_code}=    Convert To String    ${response.status_code}
+    Should Be Equal As Strings    ${status_code}    401
+    
+    ${response_json}=    Set Variable    ${response.json()}
+    Log    Response Status Code: ${status_code}    # Log do status code
+    Log    Response Body: ${response_json}    # Log do corpo completo
+    Log    Response Type: ${response_json.__class__.__name__}    # Log do tipo da resposta
+    Log    Response Keys: ${response_json.keys()}    # Log das chaves disponíveis
+    
+    # Validação específica para resposta 401 sem x-api-key
+    Dictionary Should Contain Key    ${response_json}    error
+    Should Be Equal    ${response_json}[error]    Invalid token
+
+Get Devices With Invalid Api Key
+    [Documentation]    Executa GET /devices com um x-api-key inválido
+    ${invalid_headers}=    Create Dictionary    
+    ...    Content-Type=application/json
+    ...    x-api-key=invalid_key_123
+    ${response}=    GET On Session    
+    ...    alias=device_no_auth    # Usando a sessão sem autenticação
+    ...    url=${DEVICE_ENDPOINT}    
+    ...    headers=${invalid_headers}    
+    ...    expected_status=401
+    RETURN    ${response}
+
+Get Devices With Valid Api Key
+    [Documentation]    Executa GET /devices com um x-api-key válido
+    ${valid_headers}=    Create Dictionary    
+    ...    Content-Type=application/json
+    ...    x-api-key=${HEADERS}[x-api-key]
+    ${response}=    GET On Session    
+    ...    alias=device_no_auth    # Usando a sessão sem autenticação
+    ...    url=${DEVICE_ENDPOINT}    
+    ...    headers=${valid_headers}    
+    ...    expected_status=200
+    RETURN    ${response}
+
+Validate Device Schema
+    [Arguments]    ${response}
+    [Documentation]    Valida se o corpo da resposta segue o schema definido
+    ${response_json}=    Set Variable    ${response.json()}
+    ${json_schema}=    Load JSON From File    ${SCHEMA_PATH}
+    Validate JSON By Schema    ${response_json}    ${json_schema}
+
+Get Device With Invalid Id
+    [Arguments]    ${id}
+    [Documentation]    Executa GET /devices com ID inválido (contendo espaço)
+    ${response}=    GET On Session    
+    ...    alias=device    
+    ...    url=${DEVICE_ENDPOINT}/${id}    
+    ...    headers=${HEADERS}    
+    ...    expected_status=500
+    RETURN    ${response}
+
+Validate Device List
+    [Arguments]    ${response}
+    [Documentation]    Valida a lista de dispositivos retornada
+    ${response_json}=    Set Variable    ${response.json()}
+    
+    # Valida que a resposta é uma lista não vazia
+    Should Be True    isinstance($response_json, list)    Response should be a list
+    Should Not Be Empty    ${response_json}    Device list should not be empty
+    
+    # Log informações úteis
+    ${list_size}=    Get Length    ${response_json}
+    Log    Total Devices: ${list_size}
+    Log    First Device: ${response_json}[0]
+
+### KEYWORDS DE PAGINAÇÃO ###
+
+Get Devices With Pagination
+    [Arguments]    ${page}    ${size}
+    [Documentation]    Executa GET /devices com parâmetros de paginação
+    ...    Issue: EDGE-001 - Endpoint não suporta paginação
+    ${params}=    Create Dictionary    
+    ...    page=${page}    
+    ...    size=${size}
+    ${response}=    GET On Session    
+    ...    alias=device    
+    ...    url=${DEVICE_ENDPOINT}    
+    ...    headers=${HEADERS}    
+    ...    params=${params}    
+    ...    expected_status=any
+    RETURN    ${response}
+
+Validate Pagination Info
+    [Arguments]    ${response}    ${expected_page}    ${expected_size}
+    [Documentation]    Valida as informações de paginação na resposta
+    ...    Issue: EDGE-001 - Endpoint não suporta paginação
+    ${response_json}=    Set Variable    ${response.json()}
+    
+    # Valida estrutura da paginação
+    Dictionary Should Contain Key    ${response_json}    content
+    Dictionary Should Contain Key    ${response_json}    pageable
+    Dictionary Should Contain Key    ${response_json}    totalElements
+    Dictionary Should Contain Key    ${response_json}    totalPages
+    Dictionary Should Contain Key    ${response_json}    number
+    Dictionary Should Contain Key    ${response_json}    size
+    Dictionary Should Contain Key    ${response_json}    first
+    Dictionary Should Contain Key    ${response_json}    last
+    
+    # Valida valores específicos da página
+    Should Be Equal As Integers    ${response_json}[number]    ${expected_page}
+    Should Be Equal As Integers    ${response_json}[size]    ${expected_size}
+    
+    # Valida conteúdo
+    ${content}=    Set Variable    ${response_json}[content]
+    Length Should Be    ${content}    ${expected_size}
+    
+    # Log informações úteis
+    Log    Total Elements: ${response_json}[totalElements]
+    Log    Total Pages: ${response_json}[totalPages]
+    Log    Current Page: ${response_json}[number]
+    Log    Page Size: ${response_json}[size]

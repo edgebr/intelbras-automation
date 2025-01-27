@@ -1,11 +1,23 @@
-robotframework>=6.1.1
-robotframework-requests>=0.9.5
-robotframework-jsonlibrary>=0.5
-robotframework-jsonschemalibrary
-robotframework-operatingsystem>=1.1
-robotframework-collections>=1.0.0
-robotframework-databaselibrary>=1.2.4
-requests>=2.31.0
-jsonschema>=4.17.3
-python-dateutil>=2.8.2
-PyYAML>=6.0.1
+# Framework principal
+robotframework==6.1.1
+
+# Bibliotecas essenciais
+robotframework-requests==0.9.5
+robotframework-jsonlibrary==0.5
+robotframework-jsonschemalibrary==1.0.2
+robotframework-databaselibrary==1.2.4
+
+# Bibliotecas de suporte
+robotframework-operatingsystem==1.1
+robotframework-collections==1.0.0
+
+# Dependências Python
+requests==2.31.0
+jsonschema==4.19.1
+python-dateutil==2.8.2
+PyYAML==6.0.1
+
+# Bibliotecas para validação
+jsonpath-ng==1.5.3
+jsonpointer==2.4
+rpaframework==27.1.0
