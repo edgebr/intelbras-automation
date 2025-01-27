@@ -11,6 +11,7 @@ Documentation     Testes do endpoint GET /clients
 ...    Known Issues:
 ...    - API-123: Paginação não implementada [CONSYS-196]
 ...    - API-133: GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
+...    - API-134: GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
 
 Resource          ../../../resources/page/api/4client/1GET_client.resource
 
@@ -22,8 +23,9 @@ Suite Teardown    Delete All Sessions
 
 *** Variables ***
 &{KNOWN_ISSUES}
-...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    API-123=Paginação não implementada [CONSYS-196]
+...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
+...    API-134=GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
 
 
 *** Test Cases ***
@@ -187,7 +189,7 @@ Validate Response Body Schema - client by id
     ...    Então devo receber status code 200
     ...    E o corpo da resposta deve seguir o schema esperado
     [Tags]    schema    positive    regression    GET-10
-    ${response}=    Get Client By ID    1
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
     Validate Status Code 200 - client    ${response}
     Validate Response Schema    ${response}    test_schema_get_200_client_by_id.json
     Log    Schema validation completed successfully
@@ -240,38 +242,55 @@ Validate Non Existent Page - client
 
 ### TESTES DE FILTROS ###
 
-# GET-16 - Verificação do Filtro por ID existente
-#Verify ID Filter - client
-#    [Documentation]    Validar o filtro por ID no endpoint GET /clients/{id}
-#    ...
-#    ...    ID: GET-16
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clientes/{id} para filtrar por um ID existente
-#    ...    Então devo receber status code 200
-#    ...    E o resultado deve corresponder ao filtro aplicado
-#    [Tags]    filter    positive    smoke    regression    GET-16
+# GET-14 - Verificação do Filtro por ID existente
+Verify Existing ID Filter - client
+    [Documentation]    Validar o filtro por ID existente no endpoint GET /clients/{id}
+    ...
+    ...    ID: GET-14
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clientes/{id} para filtrar por um ID existente
+    ...    Então devo receber status code 200
+    ...    E o resultado deve corresponder ao filtro aplicado
+    [Tags]    filter    positive    smoke    regression    GET-14
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    Validate ID Filter Response - client    ${response}    search_term=1    expected_status=200
 
-## GET-17 - Verificação do Filtro por ID inexistente
-#Verify ID Filter - client
-#    [Documentation]    Validar o filtro por ID no endpoint GET /clients/{id}
-#    ...
-#    ...    ID: GET-17
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clientes/{id} para filtrar por um ID inexistente
-#    ...    Então devo receber status code 404
-#    ...    E devo receber uma mensagem indicando que o cliente não foi encontrado
-#    [Tags]    filter    negative    smoke    regression    GET-17
+# GET-15 - Verificação do Filtro por ID inexistente
+Verify Nonexistent ID Filter - client
+    [Documentation]    Validar o filtro por ID inexistente no endpoint GET /clients/{id}
+    ...
+    ...    ID: GET-15
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clientes/{id} para filtrar por um ID inexistente
+    ...    Então devo receber status code 404
+    ...    E devo receber uma mensagem indicando que o cliente não foi encontrado
+    [Tags]    filter    negative    smoke    regression    GET-15
+    ${response}=    Get Client By ID    client_id=0    expected_status=404
+    Validate ID Filter Response - client    ${response}    search_term=0    expected_status=404
 
-## GET-18 - Validação de Caracteres não permitidos no Filtro por ID
-#Validate Special Characters In ID Filter - client
-#    [Documentation]    Validar comportamento do filtro com caracteres especiais
-#    ...
-#    ...    ID: GET-18
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clientes/{id} com filtro de ID contendo caracteres especiais
-#    ...    Então devo receber status code 404
-#    ...    E devo receber uma mensagem indicando que o id deve ser um número inteiro
-#    [Tags]    filter    negative    regression    GET-18
+# GET-16 - Validação de Caracteres inválidos (não permitidos) no Filtro por ID
+Validate Invalid Characters In ID Filter - client
+    [Documentation]    Validar comportamento do filtro com caracteres inválidos (não permitidos)
+    ...
+    ...    ID: GET-16
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clientes/{id} com filtro de ID contendo caracteres inválidos
+    ...    Então devo receber status code 400
+    ...    E devo receber uma mensagem indicando que o id deve ser um número inteiro
+    [Tags]    filter    negative    regression    known_issue    GET-16
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-134]
+    @{invalid_chars}=    Create List    
+    ...    abc        ABC     abc123    ABC123    123.45
+    ...    12%2034    true    false     null      %20
+    ...    %20%20     @       $         ^         &
+    ...    *          (       -         _         =
+    ...    +          [       {         |         !
+    ...    :          '       ,         <         "
+    FOR    ${char}    IN    @{invalid_chars}
+        ${response}=    Test ID Filter With Invalid Characters - client    ${char}
+        Log    ${response}
+        Validate Status Code 400 - client    ${response}
+    END

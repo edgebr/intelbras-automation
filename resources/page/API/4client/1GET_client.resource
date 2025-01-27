@@ -20,13 +20,13 @@ Get Clients
     RETURN    ${response}
 
 Get Client By ID
-    [Arguments]    ${client_id}
+    [Arguments]    ${client_id}    ${expected_status}
     [Documentation]    Executa GET /clients/{id} para buscar os detalhes de um cliente com ID específico
     ${response}=    GET On Session
     ...    alias=user
     ...    url=${BASE_URL}/clients/${client_id}
     ...    headers=${HEADERS}
-    ...    expected_status=200
+    ...    expected_status=${expected_status}
     RETURN    ${response}
 
 Get Clients With Pagination
@@ -232,3 +232,34 @@ Validate Response Schema - client
 
     Validate Json Against Schema    ${response_json}    ${schema_path}
     Log    Schema validation completed successfully
+
+Validate ID Filter Response - client
+    [Arguments]    ${response}    ${search_term}    ${expected_status}
+    [Documentation]    Valida resposta do filtro por ID
+    ${clients}=    Validate Filter Response Structure - client    ${response}    object    ${expected_status}
+
+    # Log para debug
+    Log    Filtro testado: id    level=INFO
+    Log    Termo pesquisado: ${search_term}    level=DEBUG
+    Log    Usuários retornados: ${clients}    level=DEBUG
+
+# Keywords de Validação de Filtros
+Validate Filter Response Structure - client
+    [Arguments]    ${response}    ${expected_type}    ${expected_status}
+    [Documentation]    Valida a estrutura básica da resposta do filtro
+    Status Should Be    ${expected_status}    ${response}
+
+    ${clients}=    Set Variable    ${response.json()}
+    Should Not Be Empty    ${clients}
+
+    # Valida que a resposta é do tipo esperado
+    ${is_expected_type}=    Evaluate    isinstance(${clients}, ${expected_type})
+    Should Be True    ${is_expected_type}
+
+Test ID Filter With Invalid Characters - client
+    [Arguments]    ${invalid_char}
+    [Documentation]    Testa filtro com caracteres inválidos
+    ${response}=    Get Client By ID    client_id=${invalid_char}    expected_status=400
+    Validate Filter Response Structure - client    ${response}    expected_type=object    expected_status=400
+    Log    Caractere inválido testado: ${invalid_char}    level=DEBUG
+    RETURN    ${response}
