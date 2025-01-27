@@ -41,11 +41,15 @@ jobs:
         
     - name: Run Device Tests
       run: |
+        # Primeiro vamos verificar o conteúdo do resource.resource
+        echo "Content of resource.resource:"
+        cat resources/resource.resource
+        
         robot --pythonpath . \
-             --variable RESOURCE_PATH:resources/page/API \
-             --variable RESOURCE_FILE:${PWD}/resources/resource.resource \
-             --xunit junit.xml \
-             -d ./logs ./test/API/1device/1GET_devices.robot
+             --variable RESOURCE_PATH:${PWD}/resources/page/API \
+             -d ./logs \
+             --xunit ./logs/junit-device.xml \
+             ./test/API/1device/1GET_devices.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
@@ -53,10 +57,10 @@ jobs:
     - name: Run User Tests
       run: |
         robot --pythonpath . \
-             --variable RESOURCE_PATH:resources/page/API \
-             --variable RESOURCE_FILE:${PWD}/resources/resource.resource \
-             --xunit junit2.xml \
-             -d ./logs ./test/API/2user/1GET_user.robot
+             --variable RESOURCE_PATH:${PWD}/resources/page/API \
+             -d ./logs \
+             --xunit ./logs/junit-user.xml \
+             ./test/API/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
@@ -66,13 +70,11 @@ jobs:
       if: always()
       with:
         name: robot-test-results
-        path: |
-          logs/
-          *.xml
+        path: logs/
         
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: "junit*.xml"
+        files: "logs/junit-*.xml"
         report_individual_runs: true 
