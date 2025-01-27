@@ -30,7 +30,7 @@ jobs:
         pip install -r requirements.txt
         
     - name: Create logs directory
-      run: mkdir -p logs/junit
+      run: mkdir -p logs
         
     - name: Debug - List directory structure
       run: |
@@ -41,22 +41,18 @@ jobs:
         
     - name: Update resource paths
       run: |
-        sed -i 's/page\/api\//page\/API\//g' resources/resource.resource
+        # Atualiza caminhos em todos os arquivos .robot
+        find . -name "*.robot" -type f -exec sed -i 's/page\/api\//page\/API\//g' {} \;
+        find . -name "*.resource" -type f -exec sed -i 's/page\/api\//page\/API\//g' {} \;
         
-        sed -i 's/page\/api\//page\/API\//g' test/API/1device/1GET_devices.robot
-        
-        echo "Updated resource.resource:"
-        cat resources/resource.resource
-        
-        echo "Updated 1GET_devices.robot:"
-        cat test/API/1device/1GET_devices.robot
+        echo "Updated files:"
+        find . -name "*.robot" -o -name "*.resource" -exec echo {} \; -exec cat {} \;
         
     - name: Run Device Tests
       run: |
         robot --pythonpath . \
              --variable RESOURCE_PATH:${PWD}/resources/page/API \
              -d ./logs \
-             --xunit ./logs/junit/device.xml \
              ./test/API/1device/1GET_devices.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
@@ -67,7 +63,6 @@ jobs:
         robot --pythonpath . \
              --variable RESOURCE_PATH:${PWD}/resources/page/API \
              -d ./logs \
-             --xunit ./logs/junit/user.xml \
              ./test/API/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
@@ -84,5 +79,5 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: "logs/junit/*.xml"
+        files: logs/output.xml
         report_individual_runs: true 
