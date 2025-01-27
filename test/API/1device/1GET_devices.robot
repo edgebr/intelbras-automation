@@ -1,102 +1,95 @@
 *** Settings ***
-Resource  ../../../resources/resource.resource
-Suite Setup    Suite Setup
-Suite Teardown    Suite Teardown
 Documentation     Testes do endpoint GET /devices
-...    Known Issues:
-...    - API-132: Dados sensíveis expostos sem mascaramento (compartilhado com /users)
+Resource          ../../../resources/resource.resource
+Resource          ../../../resources/page/api/1device/1GET_devices.resource
+Suite Setup       Suite Setup
+Suite Teardown    Suite Teardown
 
 *** Variables ***
-
+${STORED_SERIAL_ID}    ${EMPTY}
 
 *** Test Cases ***
+### TESTES STATUS CODE ###
+GET-DEVICE-1 - Requisição bem-sucedida (200 OK)
+    [Documentation]    Verifica se a requisição GET /devices retorna 200 OK
+    ...    @endpoint: GET /devices
+    ...    @status_code: 200 OK
+    ...
+    ...    Dado que o serviço esteja operacional
+    ...    Quando faço uma requisição GET para /devices
+    ...    Então o status code deve ser 200 OK
+    [Tags]    device    GET    success    smoke
+    ${response}=    Get Devices
+    Validate Device Status Code 200    ${response}
 
-# # 1 - Requisição bem-sucedida (200 OK)
-# Get Successful Response
-#     [Documentation]    Testa uma requisição bem-sucedida no endpoint GET.
+GET-DEVICE-2 - Requisição sem autenticação (401 Unauthorized)
+    [Documentation]    Verifica se a requisição GET /devices retorna 401 quando não autenticada
+    ...    @endpoint: GET /devices
+    ...    @status_code: 401 Unauthorized
+    ...
+    ...    Dado que não possuo um token de autenticação
+    ...    Quando faço uma requisição GET para /devices
+    ...    Então o status code deve ser 401 Unauthorized
+    [Tags]    device    GET    error    auth    security
+    ${response}=    Get Devices Without Auth
+    ${status_code}=    Convert To String    ${response.status_code}
+    Should Be Equal As Strings    ${status_code}    401
 
+GET-DEVICE-3 - Requisição inválida (400 Bad Request)
+    [Documentation]    Verifica se a requisição GET /devices retorna 400 com JSON inválido
+    ...    @endpoint: GET /devices
+    ...    @status_code: 400 Bad Request
+    ...
+    ...    Dado que tenho um JSON inválido no corpo da requisição
+    ...    Quando faço uma requisição GET para /devices
+    ...    Então o status code deve ser 400 Bad Request
+    ...    E a mensagem de erro deve indicar JSON inválido
+    [Tags]    device    GET    error    validation
+    ${response}=    Get Devices With Invalid Params
+    Validate Device Status Code 400    ${response}
 
-# # 2 - Não autorizado (401 Unauthorized)
-# Get Unauthorized Response
-#     [Documentation]    Testa o comportamento ao não fornecer token de autenticação.
+GET-DEVICE-4 - Recurso não encontrado (404 Not Found)
+    [Documentation]    Verifica se a requisição GET /devices retorna 404 quando o dispositivo não existe
+    ...    @endpoint: GET /devices/{id}
+    ...    @status_code: 404 Not Found
+    ...
+    ...    Dado que busco um dispositivo com ID inexistente
+    ...    Quando faço uma requisição GET para /devices/{id}
+    ...    Então o status code deve ser 404 Not Found
+    ...    E a mensagem de erro deve indicar que o dispositivo não foi encontrado
+    [Tags]    device    GET    error    not_found
+    ${response}=    Get Device Not Found
+    Validate Device Status Code 404    ${response}
 
-# # 3 - Acesso proibido (403 Forbidden)
-# Get Forbidden Response
-#     [Documentation]    Testa o comportamento com credenciais válidas, mas sem permissões.
+GET-DEVICE-5 - Erro interno no servidor (500 Internal Server Error)
+    [Documentation]    Verifica se a requisição GET /devices retorna 500 em caso de erro interno
+    ...    @endpoint: GET /devices
+    ...    @status_code: 500 Internal Server Error
+    ...
+    ...    Dado que ocorre um erro interno no servidor
+    ...    Quando faço uma requisição GET para /devices
+    ...    Então o status code deve ser 500 Internal Server Error
+    ...    E a mensagem de erro deve indicar erro interno no servidor
+    ...
+    ...    Issue: Endpoint /error500 não está disponível para simular erro 500
+    [Tags]    device    GET    error    server_error    robot:skip
+    ${response}=    Get Device Internal Server Error
+    Validate Device Status Code 500    ${response}
 
-# # 4 - Recurso não encontrado (404 Not Found)
-# Get Resource Not Found
-#     [Documentation]    Testa uma requisição para um recurso inexistente.
-
-# # 5 - Erro interno no servidor (500 Internal Server Error)
-# Get Internal Server Error
-#     [Documentation]    Simula condições para causar erro interno no servidor.
-
-# # 6 - Validação do corpo da requisição
-# Validate Response Body Schema
-#     [Documentation]    Valida que o corpo da resposta segue o schema esperado.
-
-# # 7 - Mensagens de erro
-# Validate Error Messages
-#     [Documentation]    Verifica se as mensagens de erro são claras e consistentes.
-
-# # 8 - Headers da requisição
-# Validate Request Headers
-#     [Documentation]    Valida o envio e manipulação dos headers obrigatórios.
-
-# # 9 - Validação do tempo de resposta
-# Validate Response Time
-#     [Documentation]    Verifica se o tempo de resposta está dentro do SLA.
-
-
-# # 11 - Paginação
-# Validate Pagination
-#     [Documentation]    Verifica o suporte à paginação no endpoint GET.
-
-
-# # 12 - Filtros e parâmetros
-# Validate Filters
-#     [Documentation]    Testa combinações de filtros no endpoint GET.
-
-# # 13 - Validar cache
-# Validate Cache Headers
-#     [Documentation]    Verifica cabeçalhos relacionados a cache na resposta.
-
-
-# # 14 - Diferentes tamanhos de resposta
-# Validate Response Size
-#     [Documentation]    Testa pequenos, médios e grandes conjuntos de dados.
-
-
-
-# # 15 - Cenários de concorrência
-# Validate Concurrent Requests
-#     [Documentation]    Envia múltiplas requisições simultaneamente e verifica a consistência.
-
-# # 16 - Locais e idiomas
-# Validate Localization
-#     [Documentation]    Testa respostas para diferentes idiomas.
-
-
-
-# # 17 - Segurança
-# Validate Sensitive Information
-#     [Documentation]    Verifica se informações sensíveis não são expostas.
-
-# # 18 - Valores nulos ou padrão
-# Validate Default Values
-#     [Documentation]    Testa comportamento com valores omitidos.
-
-
-# # 19 - Desconexão de rede
-# Validate Network Failure
-#     [Documentation]    Simula falha de conexão e valida o comportamento.
-
-# # 20 - Tipos de dados na resposta
-# Validate Response Data Types
-#     [Documentation]    Garante que os campos retornados têm os tipos corretos.
+GET-DEVICE-6 - Buscar dispositivo por serialId (200 OK)
+    [Documentation]    Verifica se a requisição GET /devices com serialId retorna 200 OK
+    ...    @endpoint: GET /devices?serialId={serialId}
+    ...    @status_code: 200 OK
+    ...
+    ...    Dado que tenho um serialId válido
+    ...    Quando faço uma requisição GET para /devices com o serialId
+    ...    Então o status code deve ser 200 OK
+    ...    E o dispositivo retornado deve ter o serialId informado
+    [Tags]    device    GET    success    filter    serialId
+    [Setup]    Get And Store Serial Id
+    ${response}=    Get Device By Serial Id    serialId=${STORED_SERIAL_ID}
+    Validate Device Status Code 200    ${response}
+    Validate Device Serial Id    ${response}    serialId=${STORED_SERIAL_ID}
 
 
-
-
-
+    
