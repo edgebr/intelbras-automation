@@ -34,21 +34,29 @@ jobs:
         
     - name: Debug - List directory structure
       run: |
-        echo "Current directory:"
+        echo "Current working directory:"
         pwd
-        echo "\nTest directory structure:"
-        ls -R test/api/
+        echo "\nComplete directory structure:"
+        find . -type f -name "*.robot" -o -name "*.resource"
+        echo "\nList all files:"
+        ls -la
+        echo "\nList test directory (if exists):"
+        ls -la test || echo "test directory not found"
+        echo "\nList resources directory:"
+        ls -la resources || echo "resources directory not found"
         
     - name: Run Device Tests
       run: |
-        robot -d ./logs test/api/1device/1GET_devices.robot
+        robot -d ./logs ./test/api/1device/1GET_devices.robot || echo "Failed with path ./test/"
+        robot -d ./logs test/api/1device/1GET_devices.robot || echo "Failed with path test/"
+        robot -d ./logs /test/api/1device/1GET_devices.robot || echo "Failed with path /test/"
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
 
     - name: Run User Tests
       run: |
-        robot -d ./logs test/api/2user/1GET_user.robot
+        robot -d ./logs ./test/api/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
