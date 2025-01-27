@@ -55,13 +55,4 @@ jobs:
       if: always()
       with:
         files: logs/output.xml
-        report_individual_runs: true
-        
-    - name: Send notification on failure
-      if: failure()
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_MESSAGE: '❌ GET User Tests failed in branch ${{ github.ref }}'
-        SLACK_COLOR: '#FF0000'
-        SLACK_TITLE: 'Robot Framework Test Results' 
+        report_individual_runs: true 
