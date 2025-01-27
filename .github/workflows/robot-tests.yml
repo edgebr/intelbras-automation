@@ -36,12 +36,8 @@ jobs:
       run: |
         echo "Current working directory:"
         pwd
-        echo "\nList test directory:"
         ls -la test/api/1device/
         ls -la test/api/2user/
-        echo "\nList resources directory:"
-        ls -la resources/page/api/1device/
-        ls -la resources/page/api/2user/
         
     - name: Run Device Tests
       run: |
