@@ -179,3 +179,6 @@ report.html
 output.xml
 selenium-screenshot-*.png
 debug.log
+
+# VSCode configuration
+.vscode/

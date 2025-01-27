@@ -30,12 +30,20 @@ jobs:
     - name: Create logs directory
       run: mkdir -p logs
         
+    - name: List directory structure
+      run: |
+        pwd
+        ls -la
+        ls -la test/api/2user/
+        
     - name: Run Robot Framework Tests
       run: |
-        robot --outputdir logs \
-             --exclude robot:skip \
-             --include GET \
-             test/api/2user/1GET_user.robot
+        robot \
+          --outputdir logs \
+          --exclude robot:skip \
+          --include GET \
+          --pythonpath . \
+          test/api/2user/1GET_user.robot || true
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
@@ -45,10 +53,7 @@ jobs:
       if: always()
       with:
         name: robot-test-results
-        path: |
-          logs/report.html
-          logs/log.html
-          logs/output.xml
+        path: logs/
         
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
