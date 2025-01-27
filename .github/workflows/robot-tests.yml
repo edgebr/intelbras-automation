@@ -28,7 +28,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install robotframework-junit
         
     - name: Create logs directory
       run: mkdir -p logs
@@ -45,6 +44,7 @@ jobs:
         robot --pythonpath . \
              --variable RESOURCE_PATH:resources/page/API \
              --variable RESOURCE_FILE:${PWD}/resources/resource.resource \
+             --xunit junit.xml \
              -d ./logs ./test/API/1device/1GET_devices.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
@@ -55,15 +55,11 @@ jobs:
         robot --pythonpath . \
              --variable RESOURCE_PATH:resources/page/API \
              --variable RESOURCE_FILE:${PWD}/resources/resource.resource \
+             --xunit junit2.xml \
              -d ./logs ./test/API/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
-
-    - name: Convert Robot Output to JUnit
-      if: always()
-      run: |
-        rebot --xunit output.xml ./logs/output.xml
         
     - name: Upload test results
       uses: actions/upload-artifact@v3
@@ -72,11 +68,11 @@ jobs:
         name: robot-test-results
         path: |
           logs/
-          output.xml
+          *.xml
         
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: output.xml
+        files: "junit*.xml"
         report_individual_runs: true 
