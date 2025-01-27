@@ -30,7 +30,7 @@ jobs:
         pip install -r requirements.txt
         
     - name: Create logs directory
-      run: mkdir -p logs
+      run: mkdir -p logs/junit
         
     - name: Debug - List directory structure
       run: |
@@ -39,16 +39,24 @@ jobs:
         echo "Full directory structure:"
         ls -R
         
-    - name: Run Device Tests
+    - name: Update resource paths
       run: |
-        # Primeiro vamos verificar o conteúdo do resource.resource
-        echo "Content of resource.resource:"
+        sed -i 's/page\/api\//page\/API\//g' resources/resource.resource
+        
+        sed -i 's/page\/api\//page\/API\//g' test/API/1device/1GET_devices.robot
+        
+        echo "Updated resource.resource:"
         cat resources/resource.resource
         
+        echo "Updated 1GET_devices.robot:"
+        cat test/API/1device/1GET_devices.robot
+        
+    - name: Run Device Tests
+      run: |
         robot --pythonpath . \
              --variable RESOURCE_PATH:${PWD}/resources/page/API \
              -d ./logs \
-             --xunit ./logs/junit-device.xml \
+             --xunit ./logs/junit/device.xml \
              ./test/API/1device/1GET_devices.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
@@ -59,7 +67,7 @@ jobs:
         robot --pythonpath . \
              --variable RESOURCE_PATH:${PWD}/resources/page/API \
              -d ./logs \
-             --xunit ./logs/junit-user.xml \
+             --xunit ./logs/junit/user.xml \
              ./test/API/2user/1GET_user.robot
       env:
         BASE_URL: ${{ secrets.BASE_URL }}
@@ -76,5 +84,5 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: "logs/junit-*.xml"
+        files: "logs/junit/*.xml"
         report_individual_runs: true 
