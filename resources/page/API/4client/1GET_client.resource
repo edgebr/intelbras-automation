@@ -19,6 +19,16 @@ Get Clients
     ...    expected_status=200
     RETURN    ${response}
 
+Get Client By ID
+    [Arguments]    ${client_id}
+    [Documentation]    Executa GET /clients/{id} para buscar os detalhes de um cliente com ID específico
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/clients/${client_id}
+    ...    headers=${HEADERS}
+    ...    expected_status=200
+    RETURN    ${response}
+
 Get Clients Without Token
     [Documentation]    Executa GET /clients sem token de autenticação
     ${headers}=    Create Dictionary
@@ -32,17 +42,16 @@ Get Clients Without Token
     RETURN    ${response}
 
 Get Clients With Invalid Request
-    [Documentation]    Envia uma requisição POST com JSON inválido para gerar erro 400
-    ${malformed_json}=    Set Variable    {invalid_json
+    [Documentation]    Envia uma requisição GET com id inválido para gerar erro 400
+    ${invalid_id}=    Set Variable    invalid_id
     &{headers}=    Create Dictionary
     ...    x-api-key=${HEADERS}[x-api-key]
     ...    Content-Type=application/json
 
-    ${response}=    POST On Session
+    ${response}=    GET On Session
     ...    alias=user
-    ...    url=${BASE_URL}/clients
+    ...    url=${BASE_URL}/clients/${invalid_id}
     ...    headers=${headers}
-    ...    data=${malformed_json}
     ...    expected_status=400
 
     RETURN    ${response}
@@ -51,24 +60,33 @@ Get Non Existent Client
     [Documentation]    Executa GET /clients para um cliente inexistente
     ${response}=    GET On Session
     ...    alias=user
-    ...    url=${BASE_URL}/clients/999999
+    ...    url=${BASE_URL}/clients/0
     ...    headers=${HEADERS}
     ...    expected_status=404
     RETURN    ${response}
 
 Get Clients With Server Error
     [Documentation]    Simula uma requisição que causa erro 500 no servidor
-    ${invalid_headers}=    Create Dictionary
+    &{headers}=    Create Dictionary
     ...    x-api-key=${HEADERS}[x-api-key]
-    ...    Content-Type=invalid/content-type
+    ...    Content-Type=application/json
     ${response}=    GET On Session
     ...    alias=user
-    ...    url=${BASE_URL}/clients
-    ...    headers=${invalid_headers}
-    ...    params=id=error500
+    ...    url=${BASE_URL}/clients/9999999999
+    ...    headers=${headers}
     ...    expected_status=500
     ${error_response}=    Set Variable    ${response.json()}
     RETURN    ${error_response}
+
+Get Clients With Invalid Key
+    [Documentation]    Executa GET /clients com token inválido
+    ${headers}=    Create Dictionary    x-api-key=invalid_key
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/users
+    ...    headers=${headers}
+    ...    expected_status=401
+    RETURN    ${response}
 
 ### KEYWORDS DE VALIDAÇÃO ###
 Validate Status Code 200 - client
@@ -93,9 +111,7 @@ Validate Status Code 400 - client
     Status Should Be    400    ${response}
 
     ${response_json}=    Set Variable    ${response.json()}
-    Should Be Equal    ${response_json}[error]    Bad Request
-    Should Be Equal    ${response_json}[message]    Expected property name or '}' in JSON at position 1
-    Should Be Equal    ${response_json}[statusCode]    ${400}
+    Should Be Equal    ${response_json}[error]    id must be an integer
 
 Validate Status Code 404 - client
     [Arguments]    ${response}
@@ -103,9 +119,7 @@ Validate Status Code 404 - client
     Status Should Be    404    ${response}
 
     ${response_json}=    Set Variable    ${response.json()}
-    Should Be Equal    ${response_json}[error]    Not Found
-    Should Be Equal    ${response_json}[message]    Cannot GET /clients/999999
-    Should Be Equal    ${response_json}[statusCode]    ${404}
+    Should Be Equal    ${response_json}[error]    Client not found
 
 Validate Status Code 500 - client
     [Arguments]    ${response}
@@ -132,3 +146,12 @@ Log Response Details - client
     Log    Status Code: ${response.status_code}
     Log    Headers: ${response.headers}
     Log    Body: ${response_json}
+
+Validate Response Schema - client
+    [Arguments]    ${response}    ${schema_file}
+    [Documentation]    Valida o schema do response contra o arquivo de schema JSON
+    ${response_json}=    Set Variable    ${response.json()}
+    ${schema_path}=    Set Variable    ${CURDIR}/../../../json/${schema_file}
+
+    Validate Json Against Schema    ${response_json}    ${schema_path}
+    Log    Schema validation completed successfully
