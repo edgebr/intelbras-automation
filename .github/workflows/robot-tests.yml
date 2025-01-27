@@ -16,6 +16,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -30,45 +32,25 @@ jobs:
     - name: Create logs directory
       run: mkdir -p logs
         
-    - name: List directory structure
+    - name: Debug - List directory structure
       run: |
+        echo "Current directory:"
         pwd
+        echo "\nRepository contents:"
         ls -la
-        ls -la test/api/1device/
-        ls -la test/api/2user/
+        echo "\nResources directory:"
+        ls -la resources/page/api/
         
-    - name: Run Device Tests
+    - name: Run GET Tests
       run: |
         robot \
-          --outputdir logs/device \
-          --exclude robot:skip \
-          --include GET \
-          --pythonpath . \
-          test/api/1device/1GET_devices.robot || true
-      env:
-        BASE_URL: ${{ secrets.BASE_URL }}
-        API_KEY: ${{ secrets.API_KEY }}
-
-    - name: Run User Tests
-      run: |
-        robot \
-          --outputdir logs/user \
-          --exclude robot:skip \
-          --include GET \
-          --pythonpath . \
-          test/api/2user/1GET_user.robot || true
-      env:
-        BASE_URL: ${{ secrets.BASE_URL }}
-        API_KEY: ${{ secrets.API_KEY }}
-        
-    - name: Merge Test Results
-      run: |
-        rebot \
           --outputdir logs \
-          --output output.xml \
-          --merge \
-          logs/device/output.xml \
-          logs/user/output.xml
+          --exclude robot:skip \
+          resources/page/api/1device/1GET_devices.resource \
+          resources/page/api/2user/1GET_user.resource
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_KEY: ${{ secrets.API_KEY }}
         
     - name: Upload test results
       uses: actions/upload-artifact@v3
