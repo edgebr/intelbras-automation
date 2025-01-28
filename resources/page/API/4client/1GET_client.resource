@@ -184,6 +184,32 @@ Get Response Time For Invalid Token - client by id
     ${response_time}=    Evaluate    ${end_time} - ${start_time}
     RETURN    ${response}    ${response_time}
 
+Get Clients With ETag
+    [Documentation]    Executa GET /clients com header If-None-Match
+    [Arguments]    ${etag}
+    &{headers}=    Create Dictionary
+    ...    x-api-key=${HEADERS}[x-api-key]
+    ...    If-None-Match=${etag}
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/clients
+    ...    headers=${headers}
+    ...    expected_status=any
+    RETURN    ${response}
+    
+Get Client By ID With ETag
+    [Documentation]    Executa GET /clients com header If-None-Match
+    [Arguments]    ${etag}    ${client_id}
+    &{headers}=    Create Dictionary
+    ...    x-api-key=${HEADERS}[x-api-key]
+    ...    If-None-Match=${etag}
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/clients/${client_id}
+    ...    headers=${headers}
+    ...    expected_status=any
+    RETURN    ${response}
+
 ### KEYWORDS DE VALIDAÇÃO ###
 Validate First Page Response - client
     [Arguments]    ${response}
@@ -507,3 +533,15 @@ Test Filter With Special Characters - client
     ${response}=    Get Clients With Filter    ${search_parameter}    ${special_char}
     Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
     Log    Caractere especial testado: ${special_char}    level=DEBUG
+
+Validate Cache Headers Response - client
+    [Arguments]    ${response}
+    [Documentation]    Valida os headers de cache na resposta
+    Dictionary Should Contain Key    ${response.headers}    Cache-Control
+    Dictionary Should Contain Key    ${response.headers}    ETag
+
+    ${cache_control}=    Get From Dictionary    ${response.headers}    Cache-Control
+    Should Match Regexp    ${cache_control}    ^max-age=\\d+$
+
+    ${etag}=    Get From Dictionary    ${response.headers}    ETag
+    Should Match Regexp    ${etag}    ^"[a-f0-9]+"$
