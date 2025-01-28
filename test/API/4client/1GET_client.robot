@@ -12,6 +12,7 @@ Documentation     Testes do endpoint GET /clients
 ...    - API-123: Paginação não implementada [CONSYS-196]
 ...    - API-133: GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    - API-134: GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
+...    - API-135: Filtros não implementados [CONSYS-204]
 
 Resource          ../../../resources/page/api/4client/1GET_client.resource
 
@@ -26,6 +27,7 @@ Suite Teardown    Delete All Sessions
 ...    API-123=Paginação não implementada [CONSYS-196]
 ...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    API-134=GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
+...    API-135=Filtros não implementados [CONSYS-204]
 
 
 *** Test Cases ***
@@ -293,4 +295,68 @@ Validate Invalid Characters In ID Filter - client
         ${response}=    Test ID Filter With Invalid Characters - client    ${char}
         Log    ${response}
         Validate Status Code 400 - client    ${response}
+    END
+
+# GET-17 - Verificação do Filtro por Nome
+Verify Name Filter - client
+    [Documentation]    Validar o filtro por nome no endpoint GET /clients
+    ...
+    ...    ID: GET-17
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de nome
+    ...    Então devo receber status code 200
+    ...    E os resultados devem corresponder ao filtro aplicado
+    [Tags]    filter    positive    smoke    regression    GET-17
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    ${response}=    Get Clients With Filter    name    test
+    Validate Filter Response - client    ${response}    name    test
+
+# GET-18 - Pesquisa Case Insensitive do Filtro por Nome
+Validate Name Filter Case Insensitive Search - client
+    [Documentation]    Validar se a pesquisa do filtro por nome é case insensitive
+    ...
+    ...    ID: GET-18
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de nome em diferentes cases
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser os mesmos independentemente do case
+    [Tags]    filter    positive    regression    GET-18
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    @{variations}=    Create List    cliente    Cliente    CLIENTE
+    FOR    ${term}    IN    @{variations}
+        Test Case Insensitive Search - client    name    ${term}
+    END
+
+# GET-19 - Pesquisa por Nome Sem Resultados
+Validate Empty Search Results Name Filter - client
+    [Documentation]    Validar comportamento quando não há resultados para o filtro por nome
+    ...
+    ...    ID: GET-19
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de nome que não retorna resultados
+    ...    Então devo receber status code 200
+    ...    E a lista de resultados deve estar vazia
+    [Tags]    filter    negative    regression    GET-19
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    ${response}=    Get Clients With Filter    name    usuário_inexistente_xyz
+    Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
+
+# GET-20 - Validação de Caracteres Especiais no Filtro por Nome
+Validate Special Characters In Name Filter - client
+    [Documentation]    Validar comportamento do filtro por nome com caracteres especiais
+    ...
+    ...    ID: GET-20
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de nome contendo caracteres especiais
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser adequadamente filtrados
+    [Tags]    filter    negative    regression    GET-20
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    @{special_chars}=    Create List    @    \#    $    %    &    *
+    FOR    ${char}    IN    @{special_chars}
+        Test Filter With Special Characters - client    name    ${char}
     END
