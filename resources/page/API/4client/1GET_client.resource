@@ -98,9 +98,21 @@ Get Clients With Invalid Key
     ${headers}=    Create Dictionary    x-api-key=invalid_key
     ${response}=    GET On Session
     ...    alias=user
-    ...    url=${BASE_URL}/users
+    ...    url=${BASE_URL}/clients
     ...    headers=${headers}
     ...    expected_status=401
+    RETURN    ${response}
+
+Get Clients With Filter
+    [Arguments]    ${field}    ${value}
+    [Documentation]    Executa GET /clients com filtro
+    ${params}=    Create Dictionary    ${field}=${value}
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/clients
+    ...    headers=${HEADERS}
+    ...    params=${params}
+    ...    expected_status=200
     RETURN    ${response}
 
 ### KEYWORDS DE VALIDAÇÃO ###
@@ -153,8 +165,8 @@ Validate Second Page Response - client
     END
 
     # Valida a estrutura dos itens
-    FOR    ${user}    IN    @{json}
-        Validate User Item Structure    ${user}
+    FOR    ${client}    IN    @{json}
+        Validate Client Item Structure    ${client}
     END
 
 Validate Empty Page Response - client
@@ -233,6 +245,109 @@ Validate Response Schema - client
     Validate Json Against Schema    ${response_json}    ${schema_path}
     Log    Schema validation completed successfully
 
+Validate Client Item Structure
+    [Arguments]    ${client}
+    [Documentation]    Valida a estrutura de um item de cliente conforme o schema.
+
+    # Campos obrigatórios conforme o schema
+    Dictionary Should Contain Key    ${client}    id
+    Dictionary Should Contain Key    ${client}    clientKey
+    Dictionary Should Contain Key    ${client}    enabled
+    Dictionary Should Contain Key    ${client}    createdAt
+    Dictionary Should Contain Key    ${client}    updatedAt
+    Dictionary Should Contain Key    ${client}    groups
+
+    # Campos opcionais (podem ser null)
+    Dictionary Should Contain Key    ${client}    email
+    Dictionary Should Contain Key    ${client}    applicationId
+
+    # Valida o tipo dos campos obrigatórios
+    ${id}=    Get From Dictionary    ${client}    id
+    ${is_id_int}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance(${id}, int)
+    Should Be True    ${is_id_int}    Campo 'id' deve ser um inteiro
+
+    ${clientKey}=    Get From Dictionary    ${client}    clientKey
+    ${is_clientKey_string}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance(${clientKey}, str)
+    Should Be True    ${is_clientKey_string}    Campo 'clientKey' deve ser uma string
+
+    ${enabled}=    Get From Dictionary    ${client}    enabled
+    ${is_enabled_bool}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance(${enabled}, bool)
+    Should Be True    ${is_enabled_bool}    Campo 'enabled' deve ser um booleano
+
+    ${createdAt}=    Get From Dictionary    ${client}    createdAt
+    ${is_createdAt_string}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance(${createdAt}, str)
+    Should Be True    ${is_createdAt_string}    Campo 'createdAt' deve ser uma string no formato datetime
+
+    ${updatedAt}=    Get From Dictionary    ${client}    updatedAt
+    ${is_updatedAt_string}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance(${updatedAt}, str)
+    Should Be True    ${is_updatedAt_string}    Campo 'updatedAt' deve ser uma string no formato datetime
+
+    # Valida o campo opcional 'email'
+    ${email}=    Get From Dictionary    ${client}    email
+    ${is_email_none}=    Run Keyword And Return Status
+    ...    Evaluate    ${email} is None
+    IF    not ${is_email_none}
+        ${is_email_string}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance(${email}, str)
+        Should Be True    ${is_email_string}    Campo 'email' deve ser uma string quando não é null
+
+        ${is_valid_email}=    Run Keyword And Return Status
+        ...    Should Match Regexp    ${email}    ^[\\w\\.-]+@[\\w\\.-]+\\.\\w+$
+        Should Be True    ${is_valid_email}    Email '${email}' não está em um formato válido
+    END
+
+    # Valida o campo opcional 'applicationId'
+    ${applicationId}=    Get From Dictionary    ${client}    applicationId
+    ${is_appId_none}=    Run Keyword And Return Status
+    ...    Evaluate    ${applicationId} is None
+    IF    not ${is_appId_none}
+        ${is_appId_int}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance(${applicationId}, int)
+        Should Be True    ${is_appId_int}    Campo 'applicationId' deve ser um inteiro quando não é null
+    END
+
+    # Valida o campo 'groups'
+    ${groups}=    Get From Dictionary    ${client}    groups
+    ${is_groups_list}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance(${groups}, list)
+    Should Be True    ${is_groups_list}    Campo 'groups' deve ser uma lista
+
+    FOR    ${group}    IN    @{groups}
+        Dictionary Should Contain Key    ${group}    id
+        Dictionary Should Contain Key    ${group}    name
+        Dictionary Should Contain Key    ${group}    clientGroup
+
+        ${groupId}=    Get From Dictionary    ${group}    id
+        ${is_groupId_int}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance(${groupId}, int)
+        Should Be True    ${is_groupId_int}    Campo 'id' no grupo deve ser um inteiro
+
+        ${groupName}=    Get From Dictionary    ${group}    name
+        ${is_groupName_string}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance(${groupName}, str)
+        Should Be True    ${is_groupName_string}    Campo 'name' no grupo deve ser uma string
+
+        ${clientGroup}=    Get From Dictionary    ${group}    clientGroup
+        Dictionary Should Contain Key    ${clientGroup}    relayAccess
+        Dictionary Should Contain Key    ${clientGroup}    relayDuration
+
+        ${relayAccess}=    Get From Dictionary    ${clientGroup}    relayAccess
+        ${is_relayAccess_int}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance(${relayAccess}, int)
+        Should Be True    ${is_relayAccess_int}    Campo 'relayAccess' deve ser um inteiro
+
+        ${relayDuration}=    Get From Dictionary    ${clientGroup}    relayDuration
+        ${is_relayDuration_int}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance(${relayDuration}, int)
+        Should Be True    ${is_relayDuration_int}    Campo 'relayDuration' deve ser um inteiro
+    END
+
+
 Validate ID Filter Response - client
     [Arguments]    ${response}    ${search_term}    ${expected_status}
     [Documentation]    Valida resposta do filtro por ID
@@ -263,3 +378,28 @@ Test ID Filter With Invalid Characters - client
     Validate Filter Response Structure - client    ${response}    expected_type=object    expected_status=400
     Log    Caractere inválido testado: ${invalid_char}    level=DEBUG
     RETURN    ${response}
+
+Validate Filter Response - client
+    [Arguments]    ${response}    ${search_parameter}    ${search_term}
+    [Documentation]    Valida resposta do filtro por nome
+    ${clients}=    Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
+
+    # Log para debug
+    Log    Filtro testado: ${search_parameter}    level=INFO
+    Log    Termo pesquisado: ${search_term}    level=DEBUG
+    Log    Usuários retornados: ${clients}    level=DEBUG
+
+Test Case Insensitive Search - client
+    [Arguments]    ${search_parameter}    ${search_term}
+    [Documentation]    Testa busca case insensitive
+    ${response}=    Get Clients With Filter    ${search_parameter}    ${search_term}
+    Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
+    Log    Parametro case insensitive testado: ${search_parameter}    level=DEBUG
+    Log    Termo case insensitive testado: ${search_term}    level=DEBUG
+
+Test Filter With Special Characters - client
+    [Arguments]    ${search_parameter}    ${special_char}
+    [Documentation]    Testa filtro com caracteres especiais
+    ${response}=    Get Clients With Filter    ${search_parameter}    ${special_char}
+    Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
+    Log    Caractere especial testado: ${special_char}    level=DEBUG
