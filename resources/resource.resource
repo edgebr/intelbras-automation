@@ -1,6 +1,6 @@
 *** Settings ***
+
 # DEVICE
-# Resource     page/api/1device/1GET_devices.resource
 # Resource     page/api/1device/2POST_devices.resource
 # Resource     page/api/1device/3DELETE_devices.resource
 # Resource     page/api/1device/4PUT_devices.resource
@@ -63,8 +63,10 @@ ${INVALID_PERMISSION_TOKEN}    x-api-key=c91f3812554f58600bdecffa4233f8ef397a6c3
 *** Keywords ***
 Suite Setup
     # Sessão para testes com autenticação
+    Create Session    device    ${BASE_URL}    headers=${HEADERS}
     Create Session    user    ${BASE_URL}    headers=${HEADERS}
     # Sessão para testes sem autenticação
+    Create Session    device_no_auth    ${BASE_URL}
     Create Session    user_no_auth    ${BASE_URL}
 
 Suite Teardown

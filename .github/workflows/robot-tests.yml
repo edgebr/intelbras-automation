@@ -1,0 +1,76 @@
+name: Robot Framework Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create logs directory
+      run: mkdir -p logs
+        
+    - name: Debug - List directory structure
+      run: |
+        echo "Current working directory:"
+        pwd
+        echo "Full directory structure:"
+        ls -R
+        
+    - name: Update resource paths
+      run: |
+        # Atualiza caminhos em todos os arquivos .robot
+        find . -name "*.robot" -type f -exec sed -i 's/page\/api\//page\/API\//g' {} \;
+        find . -name "*.resource" -type f -exec sed -i 's/page\/api\//page\/API\//g' {} \;
+        
+        echo "Updated files:"
+        find . -name "*.robot" -o -name "*.resource" -exec echo {} \; -exec cat {} \;
+        
+    - name: Run Device Tests
+      run: |
+        robot --pythonpath . \
+             --variable RESOURCE_PATH:${PWD}/resources/page/API \
+             -d ./logs \
+             ./test/API/1device/1GET_devices.robot
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_KEY: ${{ secrets.API_KEY }}
+
+    - name: Run User Tests
+      run: |
+        robot --pythonpath . \
+             --variable RESOURCE_PATH:${PWD}/resources/page/API \
+             -d ./logs \
+             ./test/API/2user/1GET_user.robot
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_KEY: ${{ secrets.API_KEY }}
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: robot-test-results
+        path: logs/ 
