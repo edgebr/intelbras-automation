@@ -341,7 +341,7 @@ Validate Empty Search Results Name Filter - client
     ...    E a lista de resultados deve estar vazia
     [Tags]    filter    name_filter    negative    regression    known_issue    GET-19
     [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
-    ${response}=    Get Clients With Filter    name    usuário_inexistente_xyz
+    ${response}=    Get Clients With Filter    name    nome_inexistente_xyz
     Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
 
 # GET-20 - Validação de Caracteres Especiais no Filtro por Nome
@@ -487,4 +487,137 @@ Validate Special Characters In Group Filter - client
     @{special_chars}=    Create List    @    \#    $    %    &    *
     FOR    ${char}    IN    @{special_chars}
         Test Filter With Special Characters - client    group    ${char}
+    END
+
+## TESTES DE PERFORMANCE ###
+
+# GET-29 - Tempo de resposta para listagem de clientes (SLA: 1s)
+Validate Get Clients Response Time - client
+    [Documentation]    Validar se o tempo de resposta da listagem está dentro do SLA (1s)
+    ...
+    ...    ID: GET-29
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então o tempo de resposta deve ser menor ou igual a 1 segundo
+    [Tags]    performance    positive    sla_1s    GET-29
+    ${response}    ${response_time}=    Get Response Time For Clients List
+    Validate Response Time - client    ${response_time}    1
+    Status Should Be    200    ${response}
+    Validate Response Has Content - client    ${response}
+
+# GET-30 - Tempo de resposta para cliente específico (SLA: 0.8s)
+Validate Get Single Client Response Time - client by id
+    [Documentation]    Validar se o tempo de resposta para um cliente específico está dentro do SLA (0.8s)
+    ...
+    ...    ID: GET-30
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para um cliente específico
+    ...    Então o tempo de resposta deve ser menor que 0.8 segundos
+    [Tags]    performance    positive    sla_0.8s    GET-30
+    ${response}    ${response_time}=    Get Response Time For Single Client    client_id=1    expected_status=200
+    Validate Response Time - client    ${response_time}    0.8
+    Status Should Be    200    ${response}
+    Validate Response Has Content - client    ${response}
+
+# GET-31 - Tempo de resposta com token inválido para listagem de clientes (SLA: 0.5s)
+Validate Invalid Token Response Time - client
+    [Documentation]    Validar tempo de resposta com token inválido para GET /clients (SLA: 0.5s)
+    ...
+    ...    ID: GET-31
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
+    ...    E devo receber a mensagem "Invalid token"
+    [Tags]    performance    negative    sla_0.5s    GET-31
+    ${response}    ${response_time}=    Get Response Time For Invalid Token - client list
+    # Valida o tempo de resposta
+    Validate Response Time - client    ${response_time}    0.5
+    # Valida o status da resposta
+    Status Should Be    401    ${response}
+    # Valida a mensagem de erro
+    ${response_json}=    Set Variable    ${response.json()}
+    ${error_message}=    Get From Dictionary    ${response_json}    error
+    Should Be Equal    ${error_message}    Invalid token
+
+# GET-32 - Tempo de resposta com token inválido para cliente específico (SLA: 0.5s)
+Validate Invalid Token Response Time - client by id
+    [Documentation]    Validar tempo de resposta com token inválido para GET /clients/{id} (SLA: 0.5s)
+    ...
+    ...    ID: GET-32
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
+    ...    E devo receber a mensagem "Invalid token"
+    [Tags]    performance    negative    sla_0.5s    GET-32
+    ${response}    ${response_time}=    Get Response Time For Invalid Token - client by id
+    # Valida o tempo de resposta
+    Validate Response Time - client    ${response_time}    0.5
+    # Valida o status da resposta
+    Status Should Be    401    ${response}
+    # Valida a mensagem de erro
+    ${response_json}=    Set Variable    ${response.json()}
+    ${error_message}=    Get From Dictionary    ${response_json}    error
+    Should Be Equal    ${error_message}    Invalid token
+
+# GET-33 - Tempo de resposta para cliente inexistente (SLA: 0.5s)
+Validate Response Time For Nonexistent Client - client by id
+    [Documentation]    Validar se o tempo de resposta para um cliente inexistente está dentro do SLA (0.5s)
+    ...
+    ...    ID: GET-33
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET /clients/{id} para um cliente inexistente
+    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
+    [Tags]    performance    negative    sla_0.5s    known_issue    GET-33
+    ${response}    ${response_time}=    Get Response Time For Single Client    client_id=0    expected_status=404
+    Validate Response Time - client    ${response_time}    0.8
+    Status Should Be    404    ${response}
+    Validate Response Has Content - client    ${response}
+
+# GET-34 - Tempo de resposta para listagem de clientes com filtro (SLA: 1s)
+Validate Get Clients Response Time - client with filter
+    [Documentation]    Validar se o tempo de resposta da listagem está dentro do SLA (1s)
+    ...
+    ...    ID: GET-34
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
+    [Tags]    performance    positive    sla_1s    known_issue    GET-34
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    &{filters}=    Create Dictionary    
+    ...    name=test
+    ...    application=test
+    ...    group=test
+    FOR    ${key}    ${value}    IN    &{filters}
+        ${response}    ${response_time}=    Get Response Time For Clients List With Filter    ${key}    ${value}
+        Validate Response Time - client    ${response_time}    1
+        Status Should Be    200    ${response}
+        Validate Response Has Content - client    ${response}
+    END
+
+# GET-35 - Tempo de resposta para pesquisa de cliente sem resultados (SLA: 1s)
+Validate Response Time For Empty Search Results - client with filter
+    [Documentation]    Validar se o tempo de resposta quando não há resultados para o filtro está dentro do SLA (1s)
+    ...
+    ...    ID: GET-35
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET /clients com filtro que não retorna resultados
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
+    [Tags]    performance    positive    sla_1s    known_issue    GET-35
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+        &{filters}=    Create Dictionary    
+        ...    name=nome_inexistente_xyz
+        ...    application=aplicacao_inexistente_xyz
+        ...    group=grupo_inexistente_xyz
+    FOR    ${key}    ${value}    IN    &{filters}
+        ${response}    ${response_time}=    Get Response Time For Clients List With Filter    ${key}    ${value}
+        Validate Response Time - client    ${response_time}    1
+        Status Should Be    200    ${response}
+        Validate Response Has Content - client    ${response}
     END

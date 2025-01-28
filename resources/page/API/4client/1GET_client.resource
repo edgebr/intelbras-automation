@@ -104,6 +104,17 @@ Get Clients With Invalid Key
     ...    expected_status=401
     RETURN    ${response}
 
+Get Clients By ID With Invalid Key
+    [Documentation]    Executa GET /clients com token inválido
+    [Arguments]    ${client_id}
+    ${headers}=    Create Dictionary    x-api-key=invalid_key
+    ${response}=    GET On Session
+    ...    alias=user
+    ...    url=${BASE_URL}/clients/${client_id}
+    ...    headers=${headers}
+    ...    expected_status=401
+    RETURN    ${response}
+
 Get Clients With Filter
     [Arguments]    ${field}    ${value}
     [Documentation]    Executa GET /clients com filtro
@@ -115,6 +126,63 @@ Get Clients With Filter
     ...    params=${params}
     ...    expected_status=200
     RETURN    ${response}
+
+Get Response Time For Clients List
+    [Documentation]    Executa a requisição GET /clients e retorna o tempo de resposta.
+    ...    Returns:
+    ...        response: Objeto de resposta da requisição
+    ...        response_time: Tempo de resposta em segundos
+    ${start_time}=    Get Time    epoch
+    ${response}=    Get Clients
+    ${end_time}=    Get Time    epoch
+    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    RETURN    ${response}    ${response_time}
+
+Get Response Time For Single Client
+    [Arguments]    ${client_id}    ${expected_status}
+    [Documentation]    Executa a requisição GET /clients/{id} e retorna o tempo de resposta.
+    ...    Returns:
+    ...        response: Objeto de resposta da requisição
+    ...        response_time: Tempo de resposta em segundos
+    ${start_time}=    Get Time    epoch
+    ${response}=    Get Client By ID    ${client_id}    ${expected_status}
+    ${end_time}=    Get Time    epoch
+    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    RETURN    ${response}    ${response_time}
+
+Get Response Time For Clients List With Filter
+    [Arguments]    ${search_parameter}    ${search_term}
+    [Documentation]    Executa a requisição GET /clients com filtro e retorna o tempo de resposta.
+    ...    Returns:
+    ...        response: Objeto de resposta da requisição
+    ...        response_time: Tempo de resposta em segundos
+    ${start_time}=    Get Time    epoch
+    ${response}=    Get Clients With Filter    ${search_parameter}    ${search_term}
+    ${end_time}=    Get Time    epoch
+    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    RETURN    ${response}    ${response_time}
+
+Get Response Time For Invalid Token - client list
+    [Documentation]    Executa a requisição com token inválido e retorna o tempo de resposta.
+    ...    Returns:
+    ...        response: Objeto de resposta da requisição
+    ...        response_time: Tempo de resposta em segundos
+    ${start_time}=    Get Time    epoch
+    ${response}=    Get Clients With Invalid Key
+    ${end_time}=    Get Time    epoch
+    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    RETURN    ${response}    ${response_time}
+
+Get Response Time For Invalid Token - client by id
+    [Documentation]    Executa a requisição com token inválido e retorna o tempo de resposta.
+    ...    Returns:
+    ...        response: Objeto de resposta da requisição
+    ...        response_time: Tempo de resposta em segundos
+    ${start_time}=    Get Time    epoch
+    ${response}=    Get Clients By ID With Invalid Key    client_id=1
+    ${end_time}=    Get Time    epoch
+    ${response_time}=    Evaluate    ${end_time} - ${start_time}
+    RETURN    ${response}    ${response_time}
 
 ### KEYWORDS DE VALIDAÇÃO ###
 Validate First Page Response - client
@@ -367,6 +435,23 @@ Validate Client Item Structure
         Should Be True    ${is_relayDuration_int}    Campo 'relayDuration' deve ser um inteiro
     END
 
+Validate Response Time - client
+    [Arguments]    ${response_time}    ${sla_limit}=0.8
+    [Documentation]    Valida se o tempo de resposta está dentro do limite do SLA.
+    ...    Args:
+    ...        response_time: Tempo de resposta em segundos
+    ...        sla_limit: Limite máximo aceitável em segundos (default: 0.8)
+
+    # Registra métricas detalhadas
+    Log    Tempo de resposta: ${response_time}s    WARN
+    Log    SLA esperado: ${sla_limit}s    WARN
+    Log    Diferença: ${response_time - ${sla_limit}}s    WARN
+
+    # Valida o SLA
+    Should Be True    ${response_time} <= ${sla_limit}
+    ...    O tempo de resposta de ${response_time} segundos excedeu o SLA de ${sla_limit} segundo(s).
+
+# Keywords de Validação de Filtros
 
 Validate ID Filter Response - client
     [Arguments]    ${response}    ${search_term}    ${expected_status}
@@ -378,7 +463,6 @@ Validate ID Filter Response - client
     Log    Termo pesquisado: ${search_term}    level=DEBUG
     Log    Usuários retornados: ${clients}    level=DEBUG
 
-# Keywords de Validação de Filtros
 Validate Filter Response Structure - client
     [Arguments]    ${response}    ${expected_type}    ${expected_status}
     [Documentation]    Valida a estrutura básica da resposta do filtro
