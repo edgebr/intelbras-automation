@@ -254,7 +254,7 @@ Verify Existing ID Filter - client
     ...    Quando faço uma requisição GET para /clientes/{id} para filtrar por um ID existente
     ...    Então devo receber status code 200
     ...    E o resultado deve corresponder ao filtro aplicado
-    [Tags]    filter    positive    smoke    regression    GET-14
+    [Tags]    filter    id_filter    positive    smoke    regression    GET-14
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     Validate ID Filter Response - client    ${response}    search_term=1    expected_status=200
 
@@ -268,7 +268,7 @@ Verify Nonexistent ID Filter - client
     ...    Quando faço uma requisição GET para /clientes/{id} para filtrar por um ID inexistente
     ...    Então devo receber status code 404
     ...    E devo receber uma mensagem indicando que o cliente não foi encontrado
-    [Tags]    filter    negative    smoke    regression    GET-15
+    [Tags]    filter    id_filter    negative    smoke    regression    GET-15
     ${response}=    Get Client By ID    client_id=0    expected_status=404
     Validate ID Filter Response - client    ${response}    search_term=0    expected_status=404
 
@@ -282,7 +282,7 @@ Validate Invalid Characters In ID Filter - client
     ...    Quando faço uma requisição GET para /clientes/{id} com filtro de ID contendo caracteres inválidos
     ...    Então devo receber status code 400
     ...    E devo receber uma mensagem indicando que o id deve ser um número inteiro
-    [Tags]    filter    negative    regression    known_issue    GET-16
+    [Tags]    filter    id_filter    negative    regression    known_issue    GET-16
     [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-134]
     @{invalid_chars}=    Create List    
     ...    abc        ABC     abc123    ABC123    123.45
@@ -307,7 +307,7 @@ Verify Name Filter - client
     ...    Quando faço uma requisição GET para /clients com filtro de nome
     ...    Então devo receber status code 200
     ...    E os resultados devem corresponder ao filtro aplicado
-    [Tags]    filter    positive    smoke    regression    GET-17
+    [Tags]    filter    name_filter    positive    smoke    regression    known_issue    GET-17
     [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
     ${response}=    Get Clients With Filter    name    test
     Validate Filter Response - client    ${response}    name    test
@@ -322,7 +322,7 @@ Validate Name Filter Case Insensitive Search - client
     ...    Quando faço uma requisição GET para /clients com filtro de nome em diferentes cases
     ...    Então devo receber status code 200
     ...    E os resultados devem ser os mesmos independentemente do case
-    [Tags]    filter    positive    regression    GET-18
+    [Tags]    filter    name_filter    positive    regression    known_issue    GET-18
     [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
     @{variations}=    Create List    cliente    Cliente    CLIENTE
     FOR    ${term}    IN    @{variations}
@@ -339,7 +339,7 @@ Validate Empty Search Results Name Filter - client
     ...    Quando faço uma requisição GET para /clients com filtro de nome que não retorna resultados
     ...    Então devo receber status code 200
     ...    E a lista de resultados deve estar vazia
-    [Tags]    filter    negative    regression    GET-19
+    [Tags]    filter    name_filter    negative    regression    known_issue    GET-19
     [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
     ${response}=    Get Clients With Filter    name    usuário_inexistente_xyz
     Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
@@ -354,9 +354,137 @@ Validate Special Characters In Name Filter - client
     ...    Quando faço uma requisição GET para /clients com filtro de nome contendo caracteres especiais
     ...    Então devo receber status code 200
     ...    E os resultados devem ser adequadamente filtrados
-    [Tags]    filter    negative    regression    GET-20
+    [Tags]    filter    name_filter    negative    regression    known_issue    GET-20
     [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
     @{special_chars}=    Create List    @    \#    $    %    &    *
     FOR    ${char}    IN    @{special_chars}
         Test Filter With Special Characters - client    name    ${char}
+    END
+
+# GET-21 - Verificação do Filtro por Aplicação
+Verify Application Filter - client
+    [Documentation]    Validar o filtro por aplicação no endpoint GET /clients
+    ...
+    ...    ID: GET-21
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de aplicação
+    ...    Então devo receber status code 200
+    ...    E os resultados devem corresponder ao filtro aplicado
+    [Tags]    filter    application_filter    positive    smoke    regression    known_issue    GET-21
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    ${response}=    Get Clients With Filter    application    test
+    Validate Filter Response - client    ${response}    application    test
+
+# GET-22 - Pesquisa Case Insensitive do Filtro por Aplicação
+Validate Application Filter Case Insensitive Search - client
+    [Documentation]    Validar se a pesquisa do filtro por aplicação é case insensitive
+    ...
+    ...    ID: GET-22
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de aplicação em diferentes cases
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser os mesmos independentemente do case
+    [Tags]    filter    application_filter    positive    regression    known_issue    GET-22
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    @{variations}=    Create List    aplicacao    Aplicacao    APLICACAO
+    FOR    ${term}    IN    @{variations}
+        Test Case Insensitive Search - client    application    ${term}
+    END
+
+# GET-23 - Pesquisa por Aplicação Sem Resultados
+Validate Empty Search Results Application Filter - client
+    [Documentation]    Validar comportamento quando não há resultados para o filtro por aplicação
+    ...
+    ...    ID: GET-23
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de aplicação que não retorna resultados
+    ...    Então devo receber status code 200
+    ...    E a lista de resultados deve estar vazia
+    [Tags]    filter    application_filter    negative    regression    known_issue    GET-23
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    ${response}=    Get Clients With Filter    application    aplicacao_inexistente_xyz
+    Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
+
+# GET-24 - Validação de Caracteres Especiais no Filtro por Aplicação
+Validate Special Characters In Application Filter - client
+    [Documentation]    Validar comportamento do filtro por aplicação com caracteres especiais
+    ...
+    ...    ID: GET-24
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de aplicação contendo caracteres especiais
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser adequadamente filtrados
+    [Tags]    filter    application_filter    negative    regression    known_issue    GET-24
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    @{special_chars}=    Create List    @    \#    $    %    &    *
+    FOR    ${char}    IN    @{special_chars}
+        Test Filter With Special Characters - client    application    ${char}
+    END
+
+# GET-25 - Verificação do Filtro por Grupo
+Verify Group Filter - client
+    [Documentation]    Validar o filtro por grupo no endpoint GET /clients
+    ...
+    ...    ID: GET-25
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de grupo
+    ...    Então devo receber status code 200
+    ...    E os resultados devem corresponder ao filtro aplicado
+    [Tags]    filter    group_filter    positive    smoke    regression    known_issue    GET-25
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    ${response}=    Get Clients With Filter    group    test
+    Validate Filter Response - client    ${response}    group    test
+
+# GET-26 - Pesquisa Case Insensitive do Filtro por Grupo
+Validate Group Filter Case Insensitive Search - client
+    [Documentation]    Validar se a pesquisa do filtro por grupo é case insensitive
+    ...
+    ...    ID: GET-26
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de grupo em diferentes cases
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser os mesmos independentemente do case
+    [Tags]    filter    group_filter    positive    regression    known_issue    GET-26
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    @{variations}=    Create List    grupo    Grupo    GRUPO
+    FOR    ${term}    IN    @{variations}
+        Test Case Insensitive Search - client    group    ${term}
+    END
+
+# GET-27 - Pesquisa por Grupo Sem Resultados
+Validate Empty Search Results Group Filter - client
+    [Documentation]    Validar comportamento quando não há resultados para o filtro por grupo
+    ...
+    ...    ID: GET-27
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de grupo que não retorna resultados
+    ...    Então devo receber status code 200
+    ...    E a lista de resultados deve estar vazia
+    [Tags]    filter    group_filter    negative    regression    known_issue    GET-27
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    ${response}=    Get Clients With Filter    group    grupo_inexistente_xyz
+    Validate Filter Response Structure - client    ${response}    expected_type=list    expected_status=200
+
+# GET-28 - Validação de Caracteres Especiais no Filtro por Grupo
+Validate Special Characters In Group Filter - client
+    [Documentation]    Validar comportamento do filtro por grupo com caracteres especiais
+    ...
+    ...    ID: GET-28
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com filtro de grupo contendo caracteres especiais
+    ...    Então devo receber status code 200
+    ...    E os resultados devem ser adequadamente filtrados
+    [Tags]    filter    group_filter    negative    regression    known_issue    GET-28
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-135]
+    @{special_chars}=    Create List    @    \#    $    %    &    *
+    FOR    ${char}    IN    @{special_chars}
+        Test Filter With Special Characters - client    group    ${char}
     END
