@@ -33,8 +33,8 @@ Suite Teardown    Delete All Sessions
 *** Test Cases ***
 ### TESTES DE STATUS CODE ###
 
-# GET-1 - Requisição bem-sucedida (200 OK)
-Get Successful Response - client
+# GET-CLIENT-1 - Requisição bem-sucedida (200 OK)
+GET-CLIENT-1 - Get Successful Response - client
     [Documentation]    Validar resposta bem-sucedida do endpoint GET /clients
     ...
     ...    ID: GET-1
@@ -50,8 +50,8 @@ Get Successful Response - client
     Validate Response Has Content - client    ${response}
     Log    Response: ${response.json()}
 
-# GET-2 - Requisição sem autenticação (401 Unauthorized)
-Get Unauthorized Response - client
+# GET-CLIENT-2 - Requisição sem autenticação (401 Unauthorized)
+GET-CLIENT-2 - Get Unauthorized Response - client
     [Documentation]    Validar comportamento da API quando requisição é feita sem token
     ...
     ...    ID: GET-2
@@ -65,8 +65,8 @@ Get Unauthorized Response - client
     Validate Status Code 401 - client    ${response}
     Validate Error Message - client    ${response}    Invalid token
 
-# GET-3 - Requisição inválida (400 Bad Request)
-Get Bad Request Error - client
+# GET-CLIENT-3 - Requisição inválida (400 Bad Request)
+GET-CLIENT-3 - Get Bad Request Error - client
     [Documentation]    Validar comportamento da API com requisição inválida
     ...
     ...    ID: GET-3
@@ -80,8 +80,8 @@ Get Bad Request Error - client
     Validate Status Code 400 - client    ${response}
     Log Response Details - client    ${response}
 
-# GET-4 - Recurso não encontrado (404 Not Found)
-Get Resource Not Found - client
+# GET-CLIENT-4 - Recurso não encontrado (404 Not Found)
+GET-CLIENT-4 - Get Resource Not Found - client
     [Documentation]    Validar comportamento da API ao buscar recurso inexistente
     ...
     ...    ID: GET-4
@@ -95,8 +95,8 @@ Get Resource Not Found - client
     Validate Status Code 404 - client    ${response}
     Log Response Details - client    ${response}
 
-# GET-5 - Erro interno no servidor (500 Internal Server Error)
-Get Internal Server Error - client
+# GET-CLIENT-5 - Erro interno no servidor (500 Internal Server Error)
+GET-CLIENT-5 - Get Internal Server Error - client
     [Documentation]    Validar comportamento da API em caso de erro interno
     ...
     ...    ID: GET-5
@@ -113,8 +113,8 @@ Get Internal Server Error - client
 
 ### TESTES DE HEADERS ###
 
-# GET-6 - Requisição sem header x-api-key
-Get Clients Without Required Header - client
+# GET-CLIENT-6 - Requisição sem header x-api-key
+GET-CLIENT-6 - Get Clients Without Required Header - client
     [Documentation]    Validar comportamento da API quando a requisição é feita sem o header x-api-key
     ...
     ...    ID: GET-6
@@ -129,8 +129,8 @@ Get Clients Without Required Header - client
     Validate Error Message - client    ${response}    Invalid token
     Log Response Details - client    ${response}
 
-# GET-7 - Requisição com header x-api-key inválido
-Get Clients With Invalid Header - client
+# GET-CLIENT-7 - Requisição com header x-api-key inválido
+GET-CLIENT-7 - Get Clients With Invalid Header - client
     [Documentation]    Validar comportamento da API quando requisição é feita com token inválido
     ...
     ...    ID: GET-7
@@ -146,8 +146,8 @@ Get Clients With Invalid Header - client
     Validate Error Message    ${response}    Invalid token
     Log Response Details - client    ${response}
 
-# GET-8 - Requisição com header x-api-key válido
-Get Users With Valid Header - client
+# GET-CLIENT-8 - Requisição com header x-api-key válido
+GET-CLIENT-8 - Get Users With Valid Header - client
     [Documentation]    Validar comportamento da API quando a requisição é feita com header x-api-key válido
     ...
     ...    ID: GET-8
@@ -164,8 +164,8 @@ Get Users With Valid Header - client
 
 ### TESTES DE SCHEMA ###
 
-# GET-9 - Validação do corpo da requisição GET /clients
-Validate Response Body Schema - all clients
+# GET-CLIENT-9 - Validação do corpo da requisição GET /clients
+GET-CLIENT-9 - Validate Response Body Schema - all clients
     [Documentation]    Validar que o corpo da resposta segue o schema esperado
     ...
     ...    ID: GET-9
@@ -180,8 +180,8 @@ Validate Response Body Schema - all clients
     Validate Response Schema    ${response}    test_schema_get_200_client.json
     Log    Schema validation completed successfully
 
-# GET-10 - Validação do corpo da requisição GET /clients/{id}
-Validate Response Body Schema - client by id
+# GET-CLIENT-10 - Validação do corpo da requisição GET /clients/{id}
+GET-CLIENT-10 - Validate Response Body Schema - client by id
     [Documentation]    Validar que o corpo da resposta segue o schema esperado
     ...
     ...    ID: GET-10

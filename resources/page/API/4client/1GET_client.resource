@@ -2,6 +2,7 @@
 Library    RequestsLibrary
 Library    Collections
 Library    String
+Library    JSONLibrary
 Resource    ../../../resource.resource
 
 *** Variables ***
@@ -236,12 +237,31 @@ Log Response Details - client
     Log    Headers: ${response.headers}
     Log    Body: ${response_json}
 
+Validate Json Against Schema
+    [Arguments]    ${json_data}    ${schema_path}
+    [Documentation]    Valida um JSON contra um schema
+    ...    Args:
+    ...        json_data: Dados JSON a serem validados
+    ...        schema_path: Caminho para o arquivo de schema JSON
+    
+    # Carrega o schema do arquivo
+    ${schema}=    Load JSON From File    ${schema_path}
+    
+    # Valida o JSON contra o schema
+    Validate JSON By Schema    ${json_data}    ${schema}
+    
+    # Log para debug
+    Log    JSON validado com sucesso contra o schema: ${schema_path}    DEBUG
+
 Validate Response Schema - client
     [Arguments]    ${response}    ${schema_file}
     [Documentation]    Valida o schema do response contra o arquivo de schema JSON
     ${response_json}=    Set Variable    ${response.json()}
-    ${schema_path}=    Set Variable    ${CURDIR}/../../../json/${schema_file}
-
+    
+    # Ajusta o caminho do schema para usar o diretório correto
+    ${schema_path}=    Set Variable    ${CURDIR}/../../../../json/${schema_file}
+    
+    # Valida o schema
     Validate Json Against Schema    ${response_json}    ${schema_path}
     Log    Schema validation completed successfully
 
