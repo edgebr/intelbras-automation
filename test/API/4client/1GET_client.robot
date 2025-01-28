@@ -10,6 +10,7 @@ Documentation     Testes do endpoint GET /clients
 ...
 ...    Known Issues:
 ...    - API-123: Paginação não implementada [CONSYS-196]
+...    - API-127: Problemas no ETag
 ...    - API-133: GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    - API-134: GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    - API-135: Filtros não implementados [CONSYS-204]
@@ -25,6 +26,7 @@ Suite Teardown    Delete All Sessions
 *** Variables ***
 &{KNOWN_ISSUES}
 ...    API-123=Paginação não implementada [CONSYS-196]
+...    API-127=Problemas no ETag [CONSYS-XXX]
 ...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    API-134=GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    API-135=Filtros não implementados [CONSYS-204]
@@ -621,3 +623,127 @@ GET-CLIENT-35 - Validate Response Time For Empty Search Results - client with fi
         Status Should Be    200    ${response}
         Validate Response Has Content - client    ${response}
     END
+
+### TESTES DE CACHE ###
+
+# GET-CLIENT-36 - Validação de Headers de Cache
+GET-CLIENT-36 - Validate Cache Headers - client list
+    [Documentation]    Validar headers de cache na resposta
+    ...
+    ...    ID: GET-CLIENT-36
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber headers de cache apropriados
+    [Tags]    cache    positive    known_issue    GET-CLIENT-36
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-127] - Headers de cache não estão implementados corretamente
+    ${response}=    Get Clients
+    Validate Cache Headers Response - client    ${response}
+
+# GET-CLIENT-37 - Validação de Headers de Cache
+GET-CLIENT-37 - Validate Cache Headers - client by id
+    [Documentation]    Validar headers de cache na resposta
+    ...
+    ...    ID: GET-CLIENT-37
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então devo receber headers de cache apropriados
+    [Tags]    cache    positive    known_issue    GET-CLIENT-36
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-127] - Headers de cache não estão implementados corretamente
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    Validate Cache Headers Response - client    ${response}
+
+# GET-CLIENT-38 - Validação de Cache com ETag
+GET-CLIENT-38 - Validate ETag Cache - client list
+    [Documentation]    Validar se o cache usando ETag está funcionando corretamente
+    ...
+    ...    ID: GET-CLIENT-38
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber um ETag no header
+    ...    E ao usar o ETag em uma nova requisição, devo receber status code 304
+    [Tags]    cache    positive    known_issue    GET-CLIENT-38
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-127] - Mecanismo de ETag não está implementado corretamente
+    # Primeira requisição para obter o ETag
+    ${response1}=    Get Clients
+    ${etag}=    Get From Dictionary    ${response1.headers}    ETag
+
+    # Segunda requisição usando If-None-Match
+    ${response2}=    Get Clients With ETag    ${etag}
+    Status Should Be    304    ${response2}
+
+# GET-CLIENT-39 - Validação de Cache com ETag
+GET-CLIENT-39 - Validate ETag Cache - client by id
+    [Documentation]    Validar se o cache usando ETag está funcionando corretamente
+    ...
+    ...    ID: GET-CLIENT-39
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então devo receber um ETag no header
+    ...    E ao usar o ETag em uma nova requisição, devo receber status code 304
+    [Tags]    cache    positive    known_issue    GET-CLIENT-39
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-127] - Mecanismo de ETag não está implementado corretamente
+    # Primeira requisição para obter o ETag
+    ${response1}=    Get Client By ID    client_id=1    expected_status=200
+    ${etag}=    Get From Dictionary    ${response1.headers}    ETag
+
+    # Segunda requisição usando If-None-Match
+    ${response2}=    Get Client By ID With ETag    ${etag}    client_id=1
+    Status Should Be    304    ${response2}
+
+# GET-CLIENT-40 - Validação de Cache Expirado
+GET-CLIENT-40 - Validate Expired Cache - client list
+    [Documentation]    Validar comportamento quando o cache está expirado
+    ...
+    ...    ID: GET-CLIENT-40
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber um ETag no header
+    ...    E ao usar um ETag inválido, devo receber status code 200
+    ...    E devo receber um novo ETag
+    [Tags]    cache    positive    known_issue    GET-CLIENT-40
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-127] - Mecanismo de cache expirado não está implementado
+    # Primeira requisição para obter o ETag
+    ${response1}=    Get Clients
+    ${etag}=    Get From Dictionary    ${response1.headers}    ETag
+
+    # Espera o cache expirar (simulado com ETag inválido)
+    ${response2}=    Get Clients With ETag    "invalid-etag"
+    Status Should Be    200    ${response2}
+    Validate Response Has Content - client    ${response2}
+
+    # Verifica se recebeu novo ETag
+    Dictionary Should Contain Key    ${response2.headers}    ETag
+    ${new_etag}=    Get From Dictionary    ${response2.headers}    ETag
+    Should Not Be Equal    ${new_etag}    "invalid-etag"
+
+# GET-CLIENT-41 - Validação de Cache Expirado
+GET-CLIENT-41 - Validate Expired Cache - client by id
+    [Documentation]    Validar comportamento quando o cache está expirado
+    ...
+    ...    ID: GET-CLIENT-41
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber um ETag no header
+    ...    E ao usar um ETag inválido, devo receber status code 200
+    ...    E devo receber um novo ETag
+    [Tags]    cache    positive    known_issue    GET-CLIENT-40
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-127] - Mecanismo de cache expirado não está implementado
+    # Primeira requisição para obter o ETag
+    ${response1}=    Get Client By ID    client_id=1    expected_status=200
+    ${etag}=    Get From Dictionary    ${response1.headers}    ETag
+
+    # Espera o cache expirar (simulado com ETag inválido)
+    ${response2}=    Get Client By ID With ETag    "invalid-etag"    client_id=1
+    Status Should Be    200    ${response2}
+    Validate Response Has Content - client    ${response2}
+
+    # Verifica se recebeu novo ETag
+    Dictionary Should Contain Key    ${response2.headers}    ETag
+    ${new_etag}=    Get From Dictionary    ${response2.headers}    ETag
+    Should Not Be Equal    ${new_etag}    "invalid-etag"
