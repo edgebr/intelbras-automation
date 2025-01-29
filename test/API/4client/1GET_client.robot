@@ -1034,16 +1034,36 @@ GET-CLIENT-55 - Validate Rate Limiting - client by id
 
 ### TESTES DE VALIDAÇÃO DE DADOS ###
 
-## GET-CLIENT-59 - Validação de Tipos de Dados
-#GET-CLIENT-59 - Validate Data Types - cliet by id
-#    [Documentation]    Validar se os tipos de dados dos campos estão corretos
-#    ...
-#    ...    ID: GET-CLIENT-59
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então os tipos de dados dos campos devem estar corretos
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-59
+# GET-CLIENT-58 - Validação de Tipos de Dados
+GET-CLIENT-58 - Validate Data Types - cliet list
+    [Documentation]    Validar se os tipos de dados dos campos estão corretos
+    ...
+    ...    ID: GET-CLIENT-58
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então os tipos de dados dos campos devem estar corretos
+    [Tags]    data_validation    positive    regression    GET-CLIENT-58
+    ${response}=    Get Clients
+    ${clients}=    Set Variable    ${response.json()}
+
+    FOR    ${client}    IN    @{clients}
+        Validate Client Data Types    ${client}
+    END
+
+# GET-CLIENT-59 - Validação de Tipos de Dados
+GET-CLIENT-59 - Validate Data Types - cliet by id
+    [Documentation]    Validar se os tipos de dados dos campos estão corretos
+    ...
+    ...    ID: GET-CLIENT-59
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então os tipos de dados dos campos devem estar corretos
+    [Tags]    data_validation    positive    regression    GET-CLIENT-59
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    ${client}=    Set Variable    ${response.json()}
+    Validate Client Data Types    ${client}
 
 ## GET-CLIENT-60 - Validação de Campos Obrigatórios
 #GET-CLIENT-60 - Validate Required Fields - client list

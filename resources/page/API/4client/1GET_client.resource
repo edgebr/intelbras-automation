@@ -792,3 +792,68 @@ Validate Concurrent Pagination Responses - client
     END
 
 # Keywords de Validação de Dados
+
+*** Keywords ***
+Validate Client Data Types
+    [Arguments]    ${client}
+    [Documentation]    Valida os tipos de dados dos campos do cliente na resposta da API GET /clients
+
+    # Validação do ID (inteiro)
+    ${is_id_integer}=    Evaluate    isinstance($client['id'], int)
+    Should Be True    ${is_id_integer}    Campo 'id' deve ser inteiro, valor atual: ${client}[id]
+
+    # Validação da chave do cliente (UUID - string)
+    ${is_client_key_string}=    Evaluate    isinstance($client['clientKey'], str)
+    Should Be True    ${is_client_key_string}    Campo 'clientKey' deve ser string (UUID), valor atual: ${client}[clientKey]
+
+    # Validação do email (string ou null)
+    ${email}=    Set Variable    ${client}[email]
+    IF    $email is not None
+        ${is_email_string}=    Evaluate    isinstance($client['email'], str)
+        Should Be True    ${is_email_string}    Campo 'email' deve ser string quando presente, valor atual: ${client}[email]
+    END
+
+    # Validação do campo enabled (booleano)
+    ${is_enabled_boolean}=    Evaluate    isinstance($client['enabled'], bool)
+    Should Be True    ${is_enabled_boolean}    Campo 'enabled' deve ser booleano, valor atual: ${client}[enabled]
+
+    # Validação do applicationId (inteiro ou null)
+    ${application_id}=    Set Variable    ${client}[applicationId]
+    IF    $application_id is not None
+        ${is_application_id_integer}=    Evaluate    isinstance($client['applicationId'], int)
+        Should Be True    ${is_application_id_integer}    Campo 'applicationId' deve ser inteiro quando presente, valor atual: ${client}[applicationId]
+    END
+
+    # Validação do campo createdAt (string)
+    ${is_created_at_string}=    Evaluate    isinstance($client['createdAt'], str)
+    Should Be True    ${is_created_at_string}    Campo 'createdAt' deve ser string, valor atual: ${client}[createdAt]
+
+    # Validação do campo updatedAt (string)
+    ${is_updated_at_string}=    Evaluate    isinstance($client['updatedAt'], str)
+    Should Be True    ${is_updated_at_string}    Campo 'updatedAt' deve ser string, valor atual: ${client}[updatedAt]
+
+    # Validação do campo groups (lista de objetos)
+    ${is_groups_list}=    Evaluate    isinstance($client['groups'], list)
+    Should Be True    ${is_groups_list}    Campo 'groups' deve ser uma lista, valor atual: ${client}[groups]
+
+    # Iteração sobre os grupos, se existirem
+    FOR    ${group}    IN    @{client['groups']}
+        ${is_group_id_integer}=    Evaluate    isinstance($group['id'], int)
+        Should Be True    ${is_group_id_integer}    Campo 'groups.id' deve ser inteiro, valor atual: ${group}[id]
+
+        ${is_group_name_string}=    Evaluate    isinstance($group['name'], str)
+        Should Be True    ${is_group_name_string}    Campo 'groups.name' deve ser string, valor atual: ${group}[name]
+
+        # Validação do objeto clientGroup dentro de groups
+        ${is_client_group_dict}=    Evaluate    isinstance($group['clientGroup'], dict)
+        Should Be True    ${is_client_group_dict}    Campo 'groups.clientGroup' deve ser um objeto, valor atual: ${group}[clientGroup]
+
+        ${is_relay_access_integer}=    Evaluate    isinstance($group['clientGroup']['relayAccess'], int)
+        Should Be True    ${is_relay_access_integer}    Campo 'groups.clientGroup.relayAccess' deve ser inteiro, valor atual: ${group}[clientGroup][relayAccess]
+
+        ${is_relay_duration_integer}=    Evaluate    isinstance($group['clientGroup']['relayDuration'], int)
+        Should Be True    ${is_relay_duration_integer}    Campo 'groups.clientGroup.relayDuration' deve ser inteiro, valor atual: ${group}[clientGroup][relayDuration]
+    END
+
+    # Log para debug
+    Log    Tipos de dados validados para cliente: ${client['id']}    level=DEBUG
