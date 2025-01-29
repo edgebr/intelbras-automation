@@ -11,6 +11,8 @@ Documentation     Testes do endpoint GET /clients
 ...    Known Issues:
 ...    - API-123: Paginação não implementada [CONSYS-196]
 ...    - API-127: Problemas no ETag [CONSYS-205]
+...    - API-129: Rate Limiting não implementado
+...    - API-131: Headers de proteção XSS não implementados [CONSYS-206]
 ...    - API-133: GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    - API-134: GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    - API-135: Filtros não implementados [CONSYS-204]
@@ -27,6 +29,8 @@ Suite Teardown    Delete All Sessions
 &{KNOWN_ISSUES}
 ...    API-123=Paginação não implementada [CONSYS-196]
 ...    API-127=Problemas no ETag [CONSYS-205]
+...    API-129=Rate Limiting não implementado
+...    API-131=Headers de proteção XSS não implementados [CONSYS-206]
 ...    API-133=GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    API-134=GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    API-135=Filtros não implementados [CONSYS-204]
@@ -883,73 +887,128 @@ GET-CLIENT-49 - Validate Concurrent Paginated Requests - client
 ### TESTES DE SEGURANÇA ###
 
 # GET-CLIENT-50 - Validação de Autenticação
-#GET-CLIENT-50 - Validate Authentication Security - client list
-#    [Documentation]    Validar aspectos de segurança relacionados à autenticação
-#    ...
-#    ...    ID: GET-CLIENT-50
-#    ...
-#    ...    Dado que envio um token de autenticação inválido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então devo receber status code 401
-#    ...    E devo receber a mensagem "Invalid token"
-#    [Tags]    security    negative    regression    GET-CLIENT-50
+GET-CLIENT-50 - Validate Authentication Security - client list
+    [Documentation]    Validar aspectos de segurança relacionados à autenticação
+    ...
+    ...    ID: GET-CLIENT-50
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber status code 401
+    ...    E devo receber a mensagem "Invalid token"
+    [Tags]    security    negative    regression    GET-CLIENT-50
+    ${response}=    Get Clients Without Token
+    Validate Status Code 401    ${response}
+    Validate Error Message    ${response}    Invalid token
 
-## GET-CLIENT-51 - Validação de Autenticação
-#GET-CLIENT-51 - Validate Authentication Security - client by id
-#    [Documentation]    Validar aspectos de segurança relacionados à autenticação
-#    ...
-#    ...    ID: GET-CLIENT-51
-#    ...
-#    ...    Dado que envio um token de autenticação inválido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então devo receber status code 401
-#    ...    E devo receber a mensagem "Invalid token"
-#    [Tags]    security    negative    regression    GET-CLIENT-51
-#
-## GET-CLIENT-52 - Validação de Headers de Segurança
-#GET-CLIENT-52 - Validate Security Headers - client list
-#    [Documentation]    Validar headers de segurança na resposta
-#    ...
-#    ...    ID: GET-CLIENT-52
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então devo receber headers de segurança apropriados
-#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-52
-#
-## GET-CLIENT-53 - Validação de Headers de Segurança
-#GET-CLIENT-53 - Validate Security Headers - client by id
-#    [Documentation]    Validar headers de segurança na resposta
-#    ...
-#    ...    ID: GET-CLIENT-52
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então devo receber headers de segurança apropriados
-#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-53
-#
-## GET-CLIENT-54 - Validação de Rate Limiting
-#GET-CLIENT-54 - Validate Rate Limiting - client list
-#    [Documentation]    Validar se o rate limiting está funcionando
-#    ...
-#    ...    ID: GET-CLIENT-54
-#    ...
-#    ...    Dado que faço múltiplas requisições em sequência
-#    ...    Quando o limite de requisições é atingido
-#    ...    Então devo receber headers de rate limit apropriados
-#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-54
-#
-## GET-CLIENT-55 - Validação de Rate Limiting
-#GET-CLIENT-55 - Validate Rate Limiting - client by id
-#    [Documentation]    Validar se o rate limiting está funcionando
-#    ...
-#    ...    ID: GET-CLIENT-55
-#    ...
-#    ...    Dado que faço múltiplas requisições em sequência
-#    ...    Quando o limite de requisições é atingido
-#    ...    Então devo receber headers de rate limit apropriados
-#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-55
+    ${response}=    Get Clients With Invalid Key
+    Validate Status Code 401    ${response}
+    Validate Error Message    ${response}    Invalid token
 
+# GET-CLIENT-51 - Validação de Autenticação
+GET-CLIENT-51 - Validate Authentication Security - client by id
+    [Documentation]    Validar aspectos de segurança relacionados à autenticação
+    ...
+    ...    ID: GET-CLIENT-51
+    ...
+    ...    Dado que envio um token de autenticação inválido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então devo receber status code 401
+    ...    E devo receber a mensagem "Invalid token"
+    [Tags]    security    negative    regression    GET-CLIENT-51
+    ${response}=    Get Client By ID Without Token    client_id=1
+    Validate Status Code 401    ${response}
+    Validate Error Message    ${response}    Invalid token
+
+    ${response}=    Get Client By ID With Invalid Key    client_id=1
+    Validate Status Code 401    ${response}
+    Validate Error Message    ${response}    Invalid token
+
+# GET-CLIENT-52 - Validação de Headers de Segurança
+GET-CLIENT-52 - Validate Security Headers - client list
+    [Documentation]    Validar headers de segurança na resposta
+    ...
+    ...    ID: GET-CLIENT-52
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber headers de segurança apropriados
+    [Tags]    security    negative    regression    known_issue    GET-CLIENT-52
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-131]
+    ${response}=    Get Clients
+
+    @{security_headers}=    Create List
+    ...    X-Content-Type-Options
+    ...    X-Frame-Options
+    ...    X-XSS-Protection
+    ...    Content-Security-Policy
+
+    FOR    ${header}    IN    @{security_headers}
+        Should Contain    ${response.headers}    ${header}
+    END
+
+# GET-CLIENT-53 - Validação de Headers de Segurança
+GET-CLIENT-53 - Validate Security Headers - client by id
+    [Documentation]    Validar headers de segurança na resposta
+    ...
+    ...    ID: GET-CLIENT-52
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então devo receber headers de segurança apropriados
+    [Tags]    security    negative    regression    known_issue    GET-CLIENT-53
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-131]
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+
+    @{security_headers}=    Create List
+    ...    X-Content-Type-Options
+    ...    X-Frame-Options
+    ...    X-XSS-Protection
+    ...    Content-Security-Policy
+
+    FOR    ${header}    IN    @{security_headers}
+        Should Contain    ${response.headers}    ${header}
+    END
+
+# GET-CLIENT-54 - Validação de Rate Limiting
+GET-CLIENT-54 - Validate Rate Limiting - client list
+    [Documentation]    Validar se o rate limiting está funcionando
+    ...
+    ...    ID: GET-CLIENT-54
+    ...
+    ...    Dado que faço múltiplas requisições em sequência
+    ...    Quando o limite de requisições é atingido
+    ...    Então devo receber headers de rate limit apropriados
+    [Tags]    security    negative    regression    known_issue    GET-CLIENT-54
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-129]
+    FOR    ${i}    IN RANGE    10
+        ${response}=    Get Clients
+
+        Should Contain    ${response.headers}    X-RateLimit-Limit
+        Should Contain    ${response.headers}    X-RateLimit-Remaining
+        Should Contain    ${response.headers}    X-RateLimit-Reset
+    END
+
+# GET-CLIENT-55 - Validação de Rate Limiting
+GET-CLIENT-55 - Validate Rate Limiting - client by id
+    [Documentation]    Validar se o rate limiting está funcionando
+    ...
+    ...    ID: GET-CLIENT-55
+    ...
+    ...    Dado que faço múltiplas requisições em sequência
+    ...    Quando o limite de requisições é atingido
+    ...    Então devo receber headers de rate limit apropriados
+    [Tags]    security    negative    regression    known_issue    GET-CLIENT-55
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-129]
+    FOR    ${i}    IN RANGE    10
+        ${response}=    Get Client By ID    client_id=1    expected_status=200
+
+        Should Contain    ${response.headers}    X-RateLimit-Limit
+        Should Contain    ${response.headers}    X-RateLimit-Remaining
+        Should Contain    ${response.headers}    X-RateLimit-Reset
+    END
+
+# ESTOU EM DUVIDA
 ## GET-CLIENT-56 - Validação de Proteção de Dados
 #GET-CLIENT-56 - Validate Data Protection - client list
 #    [Documentation]    Validar proteção de dados sensíveis
@@ -960,7 +1019,8 @@ GET-CLIENT-49 - Validate Concurrent Paginated Requests - client
 #    ...    Quando faço uma requisição GET para /clients
 #    ...    Então os dados sensíveis devem estar mascarados
 #    [Tags]    security    negative    regression    known_issue    GET-CLIENT-56
-#
+
+# ESTOU EM DUVIDA
 ## GET-CLIENT-57 - Validação de Proteção de Dados
 #GET-CLIENT-57 - Validate Data Protection - client list
 #    [Documentation]    Validar proteção de dados sensíveis
@@ -974,17 +1034,6 @@ GET-CLIENT-49 - Validate Concurrent Paginated Requests - client
 
 ### TESTES DE VALIDAÇÃO DE DADOS ###
 
-## GET-CLIENT-58 - Validação de Tipos de Dados
-#GET-CLIENT-58 - Validate Data Types - cliet list
-#    [Documentation]    Validar se os tipos de dados dos campos estão corretos
-#    ...
-#    ...    ID: GET-CLIENT-58
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então os tipos de dados dos campos devem estar corretos
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-58
-#
 ## GET-CLIENT-59 - Validação de Tipos de Dados
 #GET-CLIENT-59 - Validate Data Types - cliet by id
 #    [Documentation]    Validar se os tipos de dados dos campos estão corretos

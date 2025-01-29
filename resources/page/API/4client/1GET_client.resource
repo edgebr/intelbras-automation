@@ -57,6 +57,19 @@ Get Clients Without Token
 
     RETURN    ${response}
 
+Get Client By ID Without Token
+    [Arguments]    ${client_id}
+    [Documentation]    Executa GET /clients/{id] sem token de autenticação
+    ${headers}=    Create Dictionary
+
+    ${response}=    GET On Session
+    ...    alias=user_no_auth
+    ...    url=${BASE_URL}/clients/${client_id}
+    ...    headers=${headers}
+    ...    expected_status=401
+
+    RETURN    ${response}
+
 Get Clients With Invalid Request
     [Documentation]    Envia uma requisição GET com id inválido para gerar erro 400
     ${invalid_id}=    Set Variable    invalid_id
@@ -104,7 +117,7 @@ Get Clients With Invalid Key
     ...    expected_status=401
     RETURN    ${response}
 
-Get Clients By ID With Invalid Key
+Get Client By ID With Invalid Key
     [Documentation]    Executa GET /clients com token inválido
     [Arguments]    ${client_id}
     ${headers}=    Create Dictionary    x-api-key=invalid_key
@@ -179,7 +192,7 @@ Get Response Time For Invalid Token - client by id
     ...        response: Objeto de resposta da requisição
     ...        response_time: Tempo de resposta em segundos
     ${start_time}=    Get Time    epoch
-    ${response}=    Get Clients By ID With Invalid Key    client_id=1
+    ${response}=    Get Client By ID With Invalid Key    client_id=1
     ${end_time}=    Get Time    epoch
     ${response_time}=    Evaluate    ${end_time} - ${start_time}
     RETURN    ${response}    ${response_time}
@@ -777,3 +790,5 @@ Validate Concurrent Pagination Responses - client
             Append To List    ${all_ids}    ${id}
         END
     END
+
+# Keywords de Validação de Dados
