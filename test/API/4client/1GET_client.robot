@@ -183,7 +183,7 @@ GET-CLIENT-9 - Validate Response Body Schema - all clients
     [Tags]    schema    positive    regression    GET-CLIENT-9
     ${response}=    Get Clients
     Validate Status Code 200 - client    ${response}
-    Validate Response Schema    ${response}    test_schema_get_200_client.json
+    Validate Response Schema - client    ${response}    test_schema_get_200_client.json
     Log    Schema validation completed successfully
 
 # GET-CLIENT-10 - Validação do corpo da requisição GET /clients/{id}
@@ -199,7 +199,7 @@ GET-CLIENT-10 - Validate Response Body Schema - client by id
     [Tags]    schema    positive    regression    GET-CLIENT-10
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     Validate Status Code 200 - client    ${response}
-    Validate Response Schema    ${response}    test_schema_get_200_client_by_id.json
+    Validate Response Schema - client    ${response}    test_schema_get_200_client_by_id.json
     Log    Schema validation completed successfully
 
 ### TESTES DE PAGINAÇÃO ###

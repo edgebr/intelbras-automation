@@ -6,6 +6,7 @@ Library    JSONLibrary
 Resource    ../../../resource.resource
 
 *** Variables ***
+${SCHEMA_DIR}    ${CURDIR}/../../../json/GET_CLIENTS
 
 
 *** Keywords ***
@@ -366,8 +367,7 @@ Validate Response Schema - client
     ${response_json}=    Set Variable    ${response.json()}
     
     # Ajusta o caminho do schema para usar o diretório correto
-    ${schema_path}=    Set Variable    ${CURDIR}/../../../../json/${schema_file}
-    
+    ${schema_path}=    Set Variable    ${SCHEMA_DIR}/${schema_file}
     # Valida o schema
     Validate Json Against Schema    ${response_json}    ${schema_path}
     Log    Schema validation completed successfully
