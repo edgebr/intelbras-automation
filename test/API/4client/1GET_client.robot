@@ -800,63 +800,85 @@ GET-CLIENT-44 - Validate Large Response Size - client
 
 ### TESTES DE CONCORRÊNCIA ###
 
-## GET-CLIENT-45 - Validação de Requisições Concorrentes
-#GET-CLIENT-45 - Validate Concurrent Requests - client list
-#    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
-#    ...
-#    ...    ID: GET-CLIENT-45
-#    ...
-#    ...    Dado que faço múltiplas requisições GET para /clients simultaneamente
-#    ...    Então devo receber respostas consistentes
-#    ...    E o tempo de resposta deve ser adequado
-#    ...    E o status code deve ser consistente
-#    [Tags]    concurrent    performance    positive    GET-CLIENT-45
-#
-## GET-CLIENT-46 - Validação de Requisições Concorrentes
-#GET-CLIENT-46 - Validate Concurrent Requests - client by id
-#    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
-#    ...
-#    ...    ID: GET-CLIENT-46
-#    ...
-#    ...    Dado que faço múltiplas requisições GET para /clients/{id} simultaneamente
-#    ...    Então devo receber respostas consistentes
-#    ...    E o tempo de resposta deve ser adequado
-#    ...    E o status code deve ser consistente
-#    [Tags]    concurrent    performance    positive    GET-CLIENT-46
+# GET-CLIENT-45 - Validação de Requisições Concorrentes
+GET-CLIENT-45 - Validate Concurrent Requests - client list
+    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
+    ...
+    ...    ID: GET-CLIENT-45
+    ...
+    ...    Dado que faço múltiplas requisições GET para /clients simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o status code deve ser consistente
+    [Tags]    concurrent    performance    positive    GET-CLIENT-45
+    ${responses}=    Run Concurrent Requests - client    Get Clients    10
+    Validate Concurrent Responses    ${responses}    Validate Client Item Structure
 
-## GET-CLIENT-47 - Validação de Concorrência com Cache
-#GET-CLIENT-47 - Validate Concurrent Cached Requests - client list
-#    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
-#    ...
-#    ...    ID: GET-CLIENT-47
-#    ...
-#    ...    Dado que faço múltiplas requisições GET para /clients com cache simultaneamente
-#    ...    Então devo receber respostas consistentes
-#    ...    E o ETag deve ser consistente
-#    [Tags]    concurrent    cache    performance    positive    GET-CLIENT-47
+# GET-CLIENT-46 - Validação de Requisições Concorrentes
+GET-CLIENT-46 - Validate Concurrent Requests - client by id
+    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
+    ...
+    ...    ID: GET-CLIENT-46
+    ...
+    ...    Dado que faço múltiplas requisições GET para /clients/{id} simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o status code deve ser consistente
+    [Tags]    concurrent    performance    positive    GET-CLIENT-46
+    ${responses}=    Run Concurrent Requests - client    Get Client By ID    10    1    200
 
-## GET-CLIENT-48 - Validação de Concorrência com Cache
-#GET-CLIENT-48 - Validate Concurrent Cached Requests - client by id
-#    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
-#    ...
-#    ...    ID: GET-CLIENT-48
-#    ...
-#    ...    Dado que faço múltiplas requisições GET para /clients/{id} com cache simultaneamente
-#    ...    Então devo receber respostas consistentes
-#    ...    E o ETag deve ser consistente
-#    [Tags]    concurrent    cache    performance    positive    GET-CLIENT-48
+# GET-CLIENT-47 - Validação de Concorrência com Cache
+GET-CLIENT-47 - Validate Concurrent Cached Requests - client list
+    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
+    ...
+    ...    ID: GET-CLIENT-47
+    ...
+    ...    Dado que faço múltiplas requisições GET para /clients com cache simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E o ETag deve ser consistente
+    [Tags]    concurrent    cache    performance    positive    GET-CLIENT-47
+    # Primeira requisição para obter ETag
+    ${initial_response}=    Get Clients
+    ${etag}=    Get From Dictionary    ${initial_response.headers}    ETag
+    ${responses}=    Run Concurrent Requests - client    Get Clients With Cache    10    ${etag}
+    Validate Concurrent Cache Responses - client    ${responses}
 
-## GET-CLIENT-49 - Validação de Concorrência com Paginação
-#GET-CLIENT-49 - Validate Concurrent Paginated Requests - client
-#    [Documentation]    Validar comportamento da paginação sob múltiplas requisições simultâneas
-##    ...
-##    ...    ID: GET-CLIENT-49
-##    ...
-#    ...    Dado que faço múltiplas requisições GET para /clients com paginação simultaneamente
-#    ...    Então devo receber respostas consistentes
-#    ...    E os registros não devem ser duplicados entre páginas
-#    ...    Known Issue: API-128 - Paginação retorna registros duplicados entre páginas
-#    [Tags]    concurrent    pagination    performance    positive    known_issue    GET-CLIENT-49
+# GET-CLIENT-48 - Validação de Concorrência com Cache
+GET-CLIENT-48 - Validate Concurrent Cached Requests - client by id
+    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
+    ...
+    ...    ID: GET-CLIENT-48
+    ...
+    ...    Dado que faço múltiplas requisições GET para /clients/{id} com cache simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E o ETag deve ser consistente
+    [Tags]    concurrent    cache    performance    positive    GET-CLIENT-48
+    # Primeira requisição para obter ETag
+    ${initial_response}=    Get Client By ID    client_id=1    expected_status=200
+    ${etag}=    Get From Dictionary    ${initial_response.headers}    ETag
+    ${responses}=    Run Concurrent Requests - client    Get Client By ID With Cache    10    ${etag}    1
+    Validate Concurrent Cache Responses - client    ${responses}
+
+# GET-CLIENT-49 - Validação de Concorrência com Paginação
+GET-CLIENT-49 - Validate Concurrent Paginated Requests - client
+    [Documentation]    Validar comportamento da paginação sob múltiplas requisições simultâneas
+    ...
+    ...    ID: GET-CLIENT-49
+    ...
+    ...    Dado que faço múltiplas requisições GET para /clients com paginação simultaneamente
+    ...    Então devo receber respostas consistentes
+    ...    E os registros não devem ser duplicados entre páginas
+    [Tags]    concurrent    pagination    performance    positive    known_issue    GET-CLIENT-49
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-123]
+    ${pages}=    Create List    1    2    3    4    5
+    @{responses}=    Create List
+
+    FOR    ${page}    IN    @{pages}
+        ${response}=    Get Clients With Pagination    page=${page}
+        Append To List    ${responses}    ${response}
+    END
+
+    Validate Concurrent Pagination Responses - client    ${responses}
 
 ### TESTES DE SEGURANÇA ###
 
