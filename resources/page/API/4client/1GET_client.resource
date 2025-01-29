@@ -361,7 +361,7 @@ Validate Response Schema - client
 
 Validate Client Item Structure
     [Arguments]    ${client}
-    [Documentation]    Valida a estrutura de um item de cliente conforme o schema.
+    [Documentation]    Valida a estrutura de um item de cliente conforme o schema
 
     # Campos obrigatórios conforme o schema
     Dictionary Should Contain Key    ${client}    id
@@ -377,88 +377,100 @@ Validate Client Item Structure
 
     # Valida o tipo dos campos obrigatórios
     ${id}=    Get From Dictionary    ${client}    id
-    ${is_id_int}=    Run Keyword And Return Status
-    ...    Evaluate    isinstance(${id}, int)
-    Should Be True    ${is_id_int}    Campo 'id' deve ser um inteiro
+    ${is_id_integer}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance($id, int)
+    Should Be True    ${is_id_integer}    Campo 'id' deve ser um inteiro
 
-    ${clientKey}=    Get From Dictionary    ${client}    clientKey
-    ${is_clientKey_string}=    Run Keyword And Return Status
-    ...    Evaluate    isinstance(${clientKey}, str)
-    Should Be True    ${is_clientKey_string}    Campo 'clientKey' deve ser uma string
+    ${client_key}=    Get From Dictionary    ${client}    clientKey
+    ${is_client_key_string}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance($client_key, str)
+    Should Be True    ${is_client_key_string}    Campo 'clientKey' deve ser uma string
 
     ${enabled}=    Get From Dictionary    ${client}    enabled
-    ${is_enabled_bool}=    Run Keyword And Return Status
-    ...    Evaluate    isinstance(${enabled}, bool)
-    Should Be True    ${is_enabled_bool}    Campo 'enabled' deve ser um booleano
+    ${is_enabled_boolean}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance($enabled, bool)
+    Should Be True    ${is_enabled_boolean}    Campo 'enabled' deve ser um booleano
 
-    ${createdAt}=    Get From Dictionary    ${client}    createdAt
-    ${is_createdAt_string}=    Run Keyword And Return Status
-    ...    Evaluate    isinstance(${createdAt}, str)
-    Should Be True    ${is_createdAt_string}    Campo 'createdAt' deve ser uma string no formato datetime
-
-    ${updatedAt}=    Get From Dictionary    ${client}    updatedAt
-    ${is_updatedAt_string}=    Run Keyword And Return Status
-    ...    Evaluate    isinstance(${updatedAt}, str)
-    Should Be True    ${is_updatedAt_string}    Campo 'updatedAt' deve ser uma string no formato datetime
-
-    # Valida o campo opcional 'email'
+    # Valida email (pode ser string ou null)
     ${email}=    Get From Dictionary    ${client}    email
     ${is_email_none}=    Run Keyword And Return Status
-    ...    Evaluate    ${email} is None
+    ...    Evaluate    $email is None
+
     IF    not ${is_email_none}
         ${is_email_string}=    Run Keyword And Return Status
-        ...    Evaluate    isinstance(${email}, str)
+        ...    Evaluate    isinstance($email, str)
         Should Be True    ${is_email_string}    Campo 'email' deve ser uma string quando não é null
 
+        # Valida formato do email apenas se não for null
         ${is_valid_email}=    Run Keyword And Return Status
         ...    Should Match Regexp    ${email}    ^[\\w\\.-]+@[\\w\\.-]+\\.\\w+$
         Should Be True    ${is_valid_email}    Email '${email}' não está em um formato válido
     END
 
-    # Valida o campo opcional 'applicationId'
-    ${applicationId}=    Get From Dictionary    ${client}    applicationId
-    ${is_appId_none}=    Run Keyword And Return Status
-    ...    Evaluate    ${applicationId} is None
-    IF    not ${is_appId_none}
-        ${is_appId_int}=    Run Keyword And Return Status
-        ...    Evaluate    isinstance(${applicationId}, int)
-        Should Be True    ${is_appId_int}    Campo 'applicationId' deve ser um inteiro quando não é null
+    # Valida applicationId (pode ser inteiro ou null)
+    ${application_id}=    Get From Dictionary    ${client}    applicationId
+    ${is_application_id_none}=    Run Keyword And Return Status
+    ...    Evaluate    $application_id is None
+
+    IF    not ${is_application_id_none}
+        ${is_application_id_integer}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance($application_id, int)
+        Should Be True    ${is_application_id_integer}    Campo 'applicationId' deve ser um inteiro quando não é null
     END
 
-    # Valida o campo 'groups'
+    # Valida datas
+    ${created_at}=    Get From Dictionary    ${client}    createdAt
+    ${is_created_at_string}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance($created_at, str)
+    Should Be True    ${is_created_at_string}    Campo 'createdAt' deve ser uma string
+    Should Match Regexp    ${created_at}    ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$
+
+    ${updated_at}=    Get From Dictionary    ${client}    updatedAt
+    ${is_updated_at_string}=    Run Keyword And Return Status
+    ...    Evaluate    isinstance($updated_at, str)
+    Should Be True    ${is_updated_at_string}    Campo 'updatedAt' deve ser uma string
+    Should Match Regexp    ${updated_at}    ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$
+
+    # Valida groups (deve ser uma lista)
     ${groups}=    Get From Dictionary    ${client}    groups
     ${is_groups_list}=    Run Keyword And Return Status
-    ...    Evaluate    isinstance(${groups}, list)
+    ...    Evaluate    isinstance($groups, list)
     Should Be True    ${is_groups_list}    Campo 'groups' deve ser uma lista
 
+    # Valida estrutura dos grupos, se existirem
     FOR    ${group}    IN    @{groups}
         Dictionary Should Contain Key    ${group}    id
         Dictionary Should Contain Key    ${group}    name
         Dictionary Should Contain Key    ${group}    clientGroup
 
-        ${groupId}=    Get From Dictionary    ${group}    id
-        ${is_groupId_int}=    Run Keyword And Return Status
-        ...    Evaluate    isinstance(${groupId}, int)
-        Should Be True    ${is_groupId_int}    Campo 'id' no grupo deve ser um inteiro
+        ${group_id}=    Get From Dictionary    ${group}    id
+        ${is_group_id_integer}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance($group_id, int)
+        Should Be True    ${is_group_id_integer}    Campo 'id' do grupo deve ser um inteiro
 
-        ${groupName}=    Get From Dictionary    ${group}    name
-        ${is_groupName_string}=    Run Keyword And Return Status
-        ...    Evaluate    isinstance(${groupName}, str)
-        Should Be True    ${is_groupName_string}    Campo 'name' no grupo deve ser uma string
+        ${group_name}=    Get From Dictionary    ${group}    name
+        ${is_group_name_string}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance($group_name, str)
+        Should Be True    ${is_group_name_string}    Campo 'name' do grupo deve ser uma string
 
-        ${clientGroup}=    Get From Dictionary    ${group}    clientGroup
-        Dictionary Should Contain Key    ${clientGroup}    relayAccess
-        Dictionary Should Contain Key    ${clientGroup}    relayDuration
+        ${client_group}=    Get From Dictionary    ${group}    clientGroup
+        ${is_client_group_dict}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance($client_group, dict)
+        Should Be True    ${is_client_group_dict}    Campo 'clientGroup' deve ser um dicionário
 
-        ${relayAccess}=    Get From Dictionary    ${clientGroup}    relayAccess
-        ${is_relayAccess_int}=    Run Keyword And Return Status
-        ...    Evaluate    isinstance(${relayAccess}, int)
-        Should Be True    ${is_relayAccess_int}    Campo 'relayAccess' deve ser um inteiro
+        # Valida estrutura do clientGroup
+        Dictionary Should Contain Key    ${client_group}    relayAccess
+        Dictionary Should Contain Key    ${client_group}    relayDuration
 
-        ${relayDuration}=    Get From Dictionary    ${clientGroup}    relayDuration
-        ${is_relayDuration_int}=    Run Keyword And Return Status
-        ...    Evaluate    isinstance(${relayDuration}, int)
-        Should Be True    ${is_relayDuration_int}    Campo 'relayDuration' deve ser um inteiro
+        ${relay_access}=    Get From Dictionary    ${client_group}    relayAccess
+        ${is_relay_access_integer}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance($relay_access, int)
+        Should Be True    ${is_relay_access_integer}    Campo 'relayAccess' deve ser um inteiro
+
+        ${relay_duration}=    Get From Dictionary    ${client_group}    relayDuration
+        ${is_relay_duration_integer}=    Run Keyword And Return Status
+        ...    Evaluate    isinstance($relay_duration, int)
+        Should Be True    ${is_relay_duration_integer}    Campo 'relayDuration' deve ser um inteiro
     END
 
 Validate Response Time - client
@@ -545,3 +557,110 @@ Validate Cache Headers Response - client
 
     ${etag}=    Get From Dictionary    ${response.headers}    ETag
     Should Match Regexp    ${etag}    ^"[a-f0-9]+"$
+
+### KEYWORDS DE VALIDAÇÃO DE TAMANHO DE RESPOSTA ###
+
+Get Response Size - client
+    [Arguments]    ${response}
+    [Documentation]    Retorna o tamanho do response em bytes
+    ${content_length}=    Get From Dictionary    ${response.headers}    Content-Length
+    RETURN    ${content_length}
+
+Validate Small Response - client
+    [Arguments]    ${response}
+    [Documentation]    Valida uma resposta pequena (até 10 registros)
+
+    # Valida status code
+    Status Should Be    200    ${response}
+
+    # Obtém o response body
+    ${body}=    Set Variable    ${response.json()}
+
+    # Valida que é uma lista
+    Should Be True    isinstance($body, list)    O response deve ser uma lista
+
+    # Valida quantidade de registros
+    ${count}=    Get Length    ${body}
+    Should Be True    ${count} <= 10
+    ...    Quantidade de registros (${count}) maior que o esperado (10)
+
+    # Valida tempo de resposta
+    ${response_time}=    Get Response Time    ${response}
+    Should Be True    ${response_time} < 0.5
+    ...    Tempo de resposta (${response_time}s) acima do esperado (0.5s)
+
+    # Valida tamanho do payload
+    ${payload_size}=    Get Response Size - client    ${response}
+    Should Be True    ${payload_size} < 10240
+    ...    Tamanho do payload (${payload_size} bytes) acima do esperado (10KB)
+
+    # Valida estrutura dos dados
+    FOR    ${item}    IN    @{body}
+        Validate Client Item Structure    ${item}
+    END
+
+Validate Medium Response - client
+    [Arguments]    ${response}
+    [Documentation]    Valida uma resposta média (50-100 registros)
+
+    # Valida status code
+    Status Should Be    200    ${response}
+
+    # Obtém o response body
+    ${body}=    Set Variable    ${response.json()}
+
+    # Valida que é uma lista
+    Should Be True    isinstance($body, list)    O response deve ser uma lista
+
+    # Valida quantidade de registros
+    ${count}=    Get Length    ${body}
+    Should Be True    50 <= ${count} <= 100
+    ...    Quantidade de registros (${count}) fora do esperado (50-100)
+
+    # Valida tempo de resposta
+    ${response_time}=    Get Response Time    ${response}
+    Should Be True    ${response_time} < 1
+    ...    Tempo de resposta (${response_time}s) acima do esperado (1s)
+
+    # Valida tamanho do payload
+    ${payload_size}=    Get Response Size - client    ${response}
+    Should Be True    ${payload_size} < 51200
+    ...    Tamanho do payload (${payload_size} bytes) acima do esperado (50KB)
+
+    # Valida estrutura dos dados
+    FOR    ${item}    IN    @{body}
+        Validate Client Item Structure    ${item}
+    END
+
+Validate Large Response - client
+    [Arguments]    ${response}
+    [Documentation]    Valida uma resposta grande (>100 registros)
+
+    # Valida status code
+    Status Should Be    200    ${response}
+
+    # Obtém o response body
+    ${body}=    Set Variable    ${response.json()}
+
+    # Valida que é uma lista
+    Should Be True    isinstance($body, list)    O response deve ser uma lista
+
+    # Valida quantidade de registros
+    ${count}=    Get Length    ${body}
+    Should Be True    ${count} > 100
+    ...    Quantidade de registros (${count}) menor que o esperado (>100)
+
+    # Valida tempo de resposta
+    ${response_time}=    Get Response Time    ${response}
+    Should Be True    ${response_time} < 2
+    ...    Tempo de resposta (${response_time}s) acima do esperado (2s)
+
+    # Valida tamanho do payload
+    ${payload_size}=    Get Response Size - client    ${response}
+    Should Be True    ${payload_size} < 102400
+    ...    Tamanho do payload (${payload_size} bytes) acima do esperado (100KB)
+
+    # Valida estrutura dos dados
+    FOR    ${item}    IN    @{body}
+        Validate Client Item Structure    ${item}
+    END

@@ -10,9 +10,9 @@ Documentation     Testes do endpoint GET /clients
 ...
 ...    Known Issues:
 ...    - API-123: Paginação não implementada [CONSYS-196]
-...    - API-127: Problemas no ETag
-...    - API-133: GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
-...    - API-134: GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
+...    - API-127: Problemas no ETag [CONSYS-205]
+...    - API-133: GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
+...    - API-134: GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    - API-135: Filtros não implementados [CONSYS-204]
 
 Resource          ../../../resources/page/api/4client/1GET_client.resource
@@ -26,9 +26,9 @@ Suite Teardown    Delete All Sessions
 *** Variables ***
 &{KNOWN_ISSUES}
 ...    API-123=Paginação não implementada [CONSYS-196]
-...    API-127=Problemas no ETag [CONSYS-XXX]
-...    API-133=GET /users/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
-...    API-134=GET /users/{id} retorna 500 ao enviar espaço [CONSYS-197]
+...    API-127=Problemas no ETag [CONSYS-205]
+...    API-133=GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
+...    API-134=GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    API-135=Filtros não implementados [CONSYS-204]
 
 
@@ -149,7 +149,7 @@ GET-CLIENT-7 - Get Clients With Invalid Header - client
     Log Response Details - client    ${response}
 
 # GET-CLIENT-8 - Requisição com header x-api-key válido
-GET-CLIENT-8 - Get Users With Valid Header - client
+GET-CLIENT-8 - Get Clients With Valid Header - client
     [Documentation]    Validar comportamento da API quando a requisição é feita com header x-api-key válido
     ...
     ...    ID: GET-8
@@ -202,7 +202,7 @@ GET-CLIENT-10 - Validate Response Body Schema - client by id
 
 # GET-CLIENT-11 - Validação de Paginação - Primeira Página
 GET-CLIENT-11 - Validate First Page - client
-    [Documentation]    Validar a primeira página no endpoint GET /users
+    [Documentation]    Validar a primeira página no endpoint GET /clients
     ...
     ...    ID: GET-CLIENT-11
     ...
@@ -747,3 +747,349 @@ GET-CLIENT-41 - Validate Expired Cache - client by id
     Dictionary Should Contain Key    ${response2.headers}    ETag
     ${new_etag}=    Get From Dictionary    ${response2.headers}    ETag
     Should Not Be Equal    ${new_etag}    "invalid-etag"
+
+### TESTES DE TAMANHO DE RESPOSTA ###
+
+# GET-CLIENT-42 - Validação de Resposta Pequena
+GET-CLIENT-42 - Validate Small Response Size - client
+    [Documentation]    Validar comportamento com conjunto pequeno de dados (até 10 registros)
+    ...
+    ...    ID: GET-CLIENT-42
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com paginação de 10 registros por página
+    ...    Então devo receber status code 200
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o tamanho do payload deve ser pequeno
+    [Tags]    response_size    performance    positive    known_issue    GET-CLIENT-42
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-123]
+    ${response}=    Get Clients With Pagination    page=1    per_page=10
+    Validate Small Response - client    ${response}
+
+# GET-CLIENT-43 - Validação de Resposta Média
+GET-CLIENT-43 - Validate Medium Response Size - client
+    [Documentation]    Validar comportamento com conjunto médio de dados (50-100 registros)
+    ...
+    ...    ID: GET-CLIENT-43
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com paginação de 50 registros por página
+    ...    Então devo receber status code 200
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o tamanho do payload deve ser médio
+    [Tags]    response_size    performance    positive    known_issue    GET-CLIENT-43
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-123]
+    ${response}=    Get Clients With Pagination    page=1    per_page=50
+    Validate Medium Response    ${response}
+
+# GET-CLIENT-44 - Validação de Resposta Grande
+GET-CLIENT-44 - Validate Large Response Size - client
+    [Documentation]    Validar comportamento com conjunto grande de dados (>100 registros)
+    ...
+    ...    ID: GET-CLIENT-44
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients com paginação de 100 registros por página
+    ...    Então devo receber status code 200
+    ...    E o tempo de resposta deve ser adequado
+    ...    E o tamanho do payload deve ser grande
+    [Tags]    response_size    performance    positive    known_issue    GET-CLIENT-44
+    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-123]
+    ${response}=    Get Clients With Pagination    page=1    per_page=100
+    Validate Large Response - client    ${response}
+
+### TESTES DE CONCORRÊNCIA ###
+
+## GET-CLIENT-45 - Validação de Requisições Concorrentes
+#GET-CLIENT-45 - Validate Concurrent Requests - client list
+#    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
+#    ...
+#    ...    ID: GET-CLIENT-45
+#    ...
+#    ...    Dado que faço múltiplas requisições GET para /clients simultaneamente
+#    ...    Então devo receber respostas consistentes
+#    ...    E o tempo de resposta deve ser adequado
+#    ...    E o status code deve ser consistente
+#    [Tags]    concurrent    performance    positive    GET-CLIENT-45
+#
+## GET-CLIENT-46 - Validação de Requisições Concorrentes
+#GET-CLIENT-46 - Validate Concurrent Requests - client by id
+#    [Documentation]    Validar comportamento do endpoint sob múltiplas requisições simultâneas
+#    ...
+#    ...    ID: GET-CLIENT-46
+#    ...
+#    ...    Dado que faço múltiplas requisições GET para /clients/{id} simultaneamente
+#    ...    Então devo receber respostas consistentes
+#    ...    E o tempo de resposta deve ser adequado
+#    ...    E o status code deve ser consistente
+#    [Tags]    concurrent    performance    positive    GET-CLIENT-46
+
+## GET-CLIENT-47 - Validação de Concorrência com Cache
+#GET-CLIENT-47 - Validate Concurrent Cached Requests - client list
+#    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
+#    ...
+#    ...    ID: GET-CLIENT-47
+#    ...
+#    ...    Dado que faço múltiplas requisições GET para /clients com cache simultaneamente
+#    ...    Então devo receber respostas consistentes
+#    ...    E o ETag deve ser consistente
+#    [Tags]    concurrent    cache    performance    positive    GET-CLIENT-47
+
+## GET-CLIENT-48 - Validação de Concorrência com Cache
+#GET-CLIENT-48 - Validate Concurrent Cached Requests - client by id
+#    [Documentation]    Validar comportamento do cache sob múltiplas requisições simultâneas
+#    ...
+#    ...    ID: GET-CLIENT-48
+#    ...
+#    ...    Dado que faço múltiplas requisições GET para /clients/{id} com cache simultaneamente
+#    ...    Então devo receber respostas consistentes
+#    ...    E o ETag deve ser consistente
+#    [Tags]    concurrent    cache    performance    positive    GET-CLIENT-48
+
+## GET-CLIENT-49 - Validação de Concorrência com Paginação
+#GET-CLIENT-49 - Validate Concurrent Paginated Requests - client
+#    [Documentation]    Validar comportamento da paginação sob múltiplas requisições simultâneas
+##    ...
+##    ...    ID: GET-CLIENT-49
+##    ...
+#    ...    Dado que faço múltiplas requisições GET para /clients com paginação simultaneamente
+#    ...    Então devo receber respostas consistentes
+#    ...    E os registros não devem ser duplicados entre páginas
+#    ...    Known Issue: API-128 - Paginação retorna registros duplicados entre páginas
+#    [Tags]    concurrent    pagination    performance    positive    known_issue    GET-CLIENT-49
+
+### TESTES DE SEGURANÇA ###
+
+# GET-CLIENT-50 - Validação de Autenticação
+#GET-CLIENT-50 - Validate Authentication Security - client list
+#    [Documentation]    Validar aspectos de segurança relacionados à autenticação
+#    ...
+#    ...    ID: GET-CLIENT-50
+#    ...
+#    ...    Dado que envio um token de autenticação inválido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então devo receber status code 401
+#    ...    E devo receber a mensagem "Invalid token"
+#    [Tags]    security    negative    regression    GET-CLIENT-50
+
+## GET-CLIENT-51 - Validação de Autenticação
+#GET-CLIENT-51 - Validate Authentication Security - client by id
+#    [Documentation]    Validar aspectos de segurança relacionados à autenticação
+#    ...
+#    ...    ID: GET-CLIENT-51
+#    ...
+#    ...    Dado que envio um token de autenticação inválido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então devo receber status code 401
+#    ...    E devo receber a mensagem "Invalid token"
+#    [Tags]    security    negative    regression    GET-CLIENT-51
+#
+## GET-CLIENT-52 - Validação de Headers de Segurança
+#GET-CLIENT-52 - Validate Security Headers - client list
+#    [Documentation]    Validar headers de segurança na resposta
+#    ...
+#    ...    ID: GET-CLIENT-52
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então devo receber headers de segurança apropriados
+#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-52
+#
+## GET-CLIENT-53 - Validação de Headers de Segurança
+#GET-CLIENT-53 - Validate Security Headers - client by id
+#    [Documentation]    Validar headers de segurança na resposta
+#    ...
+#    ...    ID: GET-CLIENT-52
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então devo receber headers de segurança apropriados
+#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-53
+#
+## GET-CLIENT-54 - Validação de Rate Limiting
+#GET-CLIENT-54 - Validate Rate Limiting - client list
+#    [Documentation]    Validar se o rate limiting está funcionando
+#    ...
+#    ...    ID: GET-CLIENT-54
+#    ...
+#    ...    Dado que faço múltiplas requisições em sequência
+#    ...    Quando o limite de requisições é atingido
+#    ...    Então devo receber headers de rate limit apropriados
+#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-54
+#
+## GET-CLIENT-55 - Validação de Rate Limiting
+#GET-CLIENT-55 - Validate Rate Limiting - client by id
+#    [Documentation]    Validar se o rate limiting está funcionando
+#    ...
+#    ...    ID: GET-CLIENT-55
+#    ...
+#    ...    Dado que faço múltiplas requisições em sequência
+#    ...    Quando o limite de requisições é atingido
+#    ...    Então devo receber headers de rate limit apropriados
+#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-55
+
+## GET-CLIENT-56 - Validação de Proteção de Dados
+#GET-CLIENT-56 - Validate Data Protection - client list
+#    [Documentation]    Validar proteção de dados sensíveis
+#    ...
+#    ...    ID: GET-CLIENT-56
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então os dados sensíveis devem estar mascarados
+#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-56
+#
+## GET-CLIENT-57 - Validação de Proteção de Dados
+#GET-CLIENT-57 - Validate Data Protection - client list
+#    [Documentation]    Validar proteção de dados sensíveis
+#    ...
+#    ...    ID: GET-CLIENT-57
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então os dados sensíveis devem estar mascarados
+#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-57
+
+### TESTES DE VALIDAÇÃO DE DADOS ###
+
+## GET-CLIENT-58 - Validação de Tipos de Dados
+#GET-CLIENT-58 - Validate Data Types - cliet list
+#    [Documentation]    Validar se os tipos de dados dos campos estão corretos
+#    ...
+#    ...    ID: GET-CLIENT-58
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então os tipos de dados dos campos devem estar corretos
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-58
+#
+## GET-CLIENT-59 - Validação de Tipos de Dados
+#GET-CLIENT-59 - Validate Data Types - cliet by id
+#    [Documentation]    Validar se os tipos de dados dos campos estão corretos
+#    ...
+#    ...    ID: GET-CLIENT-59
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então os tipos de dados dos campos devem estar corretos
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-59
+
+## GET-CLIENT-60 - Validação de Campos Obrigatórios
+#GET-CLIENT-60 - Validate Required Fields - client list
+#    [Documentation]    Validar se todos os campos obrigatórios estão presentes
+#    ...
+#    ...    ID: GET-CLIENT-60
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então todos os campos obrigatórios devem estar presentes
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-60
+#
+## GET-CLIENT-61 - Validação de Campos Obrigatórios
+#GET-CLIENT-61 - Validate Required Fields - client by id
+#    [Documentation]    Validar se todos os campos obrigatórios estão presentes
+#    ...
+#    ...    ID: GET-CLIENT-61
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então todos os campos obrigatórios devem estar presentes
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-61
+
+## GET-CLIENT-62 - Validação de Formatos de Dados
+#GET-CLIENT-62 - Validate Data Formats - client list
+#    [Documentation]    Validar se os formatos dos dados retornados estão corretos
+#    ...
+#    ...    ID: GET-CLIENT-62
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então devo receber status code 200
+#    ...    E para cada cliente retornado:
+#    ...    - O ID deve estar no formato UUID
+#    ...    - O email deve estar em formato válido
+#    ...    - O nome deve conter apenas caracteres permitidos
+#    ...    - As datas devem estar no formato ISO 8601
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-62
+#
+## GET-CLIENT-63 - Validação de Formatos de Dados
+#GET-CLIENT-63 - Validate Data Formats - client by id
+#    [Documentation]    Validar se os formatos dos dados retornados estão corretos
+#    ...
+#    ...    ID: GET-CLIENT-63
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então devo receber status code 200
+#    ...    E para o cliente retornado:
+#    ...    - O ID deve estar no formato UUID
+#    ...    - O email deve estar em formato válido
+#    ...    - O nome deve conter apenas caracteres permitidos
+#    ...    - As datas devem estar no formato ISO 8601
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-63
+#
+## GET-CLIENT-64 - Validação de Valores Limites
+#GET-CLIENT-64 - Validate Field Length Limits - client list
+#    [Documentation]    Validar limites de tamanho dos campos
+#    ...
+#    ...    ID: GET-CLIENT-64
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então os campos devem respeitar os limites de tamanho
+#    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+#
+## GET-CLIENT-64 - Validação de Valores Limites
+#GET-CLIENT-64 - Validate Field Length Limits - client by id
+#    [Documentation]    Validar limites de tamanho dos campos
+#    ...
+#    ...    ID: GET-CLIENT-64
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então os campos devem respeitar os limites de tamanho
+#    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+
+## GET-CLIENT-65 - Validação de Caracteres Especiais
+#GET-CLIENT-65 - Validate Special Characters In Fields - client list
+#    [Documentation]    Validar tratamento de caracteres especiais nos campos
+#    ...
+#    ...    ID: GET-42
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então os campos devem tratar adequadamente caracteres especiais
+#    [Tags]    data_validation    negative    regression    GET-CLIENT-65
+
+## GET-CLIENT-66 - Validação de Caracteres Especiais
+#GET-CLIENT-66 - Validate Special Characters In Fields - client by id
+#    [Documentation]    Validar tratamento de caracteres especiais nos campos
+#    ...
+#    ...    ID: GET-CLIENT-66
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então os campos devem tratar adequadamente caracteres especiais
+#    [Tags]    data_validation    negative    regression    GET-CLIENT-66
+
+## GET-CLIENT-67 - Validação de Campos Opcionais
+#GET-CLIENT-67 - Validate Optional Fields - client list
+#    [Documentation]    Validar campos opcionais quando presentes
+#    ...
+#    ...    ID: GET-CLIENT-67
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients
+#    ...    Então os campos opcionais devem estar presentes quando aplicável
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-67
+#
+## GET-CLIENT-68 - Validação de Campos Opcionais
+#GET-CLIENT-68 - Validate Optional Fields - client list
+#    [Documentation]    Validar campos opcionais quando presentes
+#    ...
+#    ...    ID: GET-CLIENT-68
+#    ...
+#    ...    Dado que tenho um token de autenticação válido
+#    ...    Quando faço uma requisição GET para /clients/{id}
+#    ...    Então os campos opcionais devem estar presentes quando aplicável
+#    [Tags]    data_validation    positive    regression    GET-CLIENT-68
