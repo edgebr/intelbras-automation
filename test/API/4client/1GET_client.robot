@@ -1065,92 +1065,122 @@ GET-CLIENT-59 - Validate Data Types - cliet by id
     ${client}=    Set Variable    ${response.json()}
     Validate Client Data Types    ${client}
 
-## GET-CLIENT-60 - Validação de Campos Obrigatórios
-#GET-CLIENT-60 - Validate Required Fields - client list
-#    [Documentation]    Validar se todos os campos obrigatórios estão presentes
-#    ...
-#    ...    ID: GET-CLIENT-60
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então todos os campos obrigatórios devem estar presentes
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-60
-#
-## GET-CLIENT-61 - Validação de Campos Obrigatórios
-#GET-CLIENT-61 - Validate Required Fields - client by id
-#    [Documentation]    Validar se todos os campos obrigatórios estão presentes
-#    ...
-#    ...    ID: GET-CLIENT-61
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então todos os campos obrigatórios devem estar presentes
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-61
+# GET-CLIENT-60 - Validação de Campos Obrigatórios
+GET-CLIENT-60 - Validate Required Fields - client list
+    [Documentation]    Validar se todos os campos obrigatórios estão presentes
+    ...
+    ...    ID: GET-CLIENT-60
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então todos os campos obrigatórios devem estar presentes
+    [Tags]    data_validation    positive    regression    GET-CLIENT-60
+    ${response}=    Get Clients
+    ${clients}=    Set Variable    ${response.json()}
 
-## GET-CLIENT-62 - Validação de Formatos de Dados
-#GET-CLIENT-62 - Validate Data Formats - client list
-#    [Documentation]    Validar se os formatos dos dados retornados estão corretos
-#    ...
-#    ...    ID: GET-CLIENT-62
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então devo receber status code 200
-#    ...    E para cada cliente retornado:
-#    ...    - O ID deve estar no formato UUID
-#    ...    - O email deve estar em formato válido
-#    ...    - O nome deve conter apenas caracteres permitidos
-#    ...    - As datas devem estar no formato ISO 8601
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-62
-#
-## GET-CLIENT-63 - Validação de Formatos de Dados
-#GET-CLIENT-63 - Validate Data Formats - client by id
-#    [Documentation]    Validar se os formatos dos dados retornados estão corretos
-#    ...
-#    ...    ID: GET-CLIENT-63
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então devo receber status code 200
-#    ...    E para o cliente retornado:
-#    ...    - O ID deve estar no formato UUID
-#    ...    - O email deve estar em formato válido
-#    ...    - O nome deve conter apenas caracteres permitidos
-#    ...    - As datas devem estar no formato ISO 8601
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-63
-#
-## GET-CLIENT-64 - Validação de Valores Limites
-#GET-CLIENT-64 - Validate Field Length Limits - client list
-#    [Documentation]    Validar limites de tamanho dos campos
-#    ...
-#    ...    ID: GET-CLIENT-64
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então os campos devem respeitar os limites de tamanho
-#    [Tags]    data_validation    negative    regression    GET-CLIENT-64
-#
-## GET-CLIENT-64 - Validação de Valores Limites
-#GET-CLIENT-64 - Validate Field Length Limits - client by id
-#    [Documentation]    Validar limites de tamanho dos campos
-#    ...
-#    ...    ID: GET-CLIENT-64
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então os campos devem respeitar os limites de tamanho
-#    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+    FOR    ${client}    IN    @{clients}
+        Validate Required Client Fields    ${client}
+    END
 
-## GET-CLIENT-65 - Validação de Caracteres Especiais
-#GET-CLIENT-65 - Validate Special Characters In Fields - client list
-#    [Documentation]    Validar tratamento de caracteres especiais nos campos
-#    ...
-#    ...    ID: GET-42
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então os campos devem tratar adequadamente caracteres especiais
-#    [Tags]    data_validation    negative    regression    GET-CLIENT-65
+# GET-CLIENT-61 - Validação de Campos Obrigatórios
+GET-CLIENT-61 - Validate Required Fields - client by id
+    [Documentation]    Validar se todos os campos obrigatórios estão presentes
+    ...
+    ...    ID: GET-CLIENT-61
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então todos os campos obrigatórios devem estar presentes
+    [Tags]    data_validation    positive    regression    GET-CLIENT-61
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    ${client}=    Set Variable    ${response.json()}
+    Validate Required Client Fields    ${client}
+
+# GET-CLIENT-62 - Validação de Formatos de Dados
+GET-CLIENT-62 - Validate Data Formats - client list
+    [Documentation]    Validar se os formatos dos dados retornados estão corretos
+    ...
+    ...    ID: GET-CLIENT-62
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então devo receber status code 200
+    ...    E para cada cliente retornado:
+    ...    - A clientKey deve estar no formato UUID
+    ...    - O email deve estar em formato válido
+    ...    - As datas devem estar no formato ISO 8601
+    [Tags]    data_validation    positive    regression    GET-CLIENT-62
+    ${response}=    Get Clients
+    ${clients}=    Set Variable    ${response.json()}
+
+    FOR    ${client}    IN    @{clients}
+        Validate Client Data Formats    ${client}
+    END
+
+# GET-CLIENT-63 - Validação de Formatos de Dados
+GET-CLIENT-63 - Validate Data Formats - client by id
+    [Documentation]    Validar se os formatos dos dados retornados estão corretos
+    ...
+    ...    ID: GET-CLIENT-63
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então devo receber status code 200
+    ...    E para o cliente retornado:
+    ...    - A clientKey deve estar no formato UUID
+    ...    - O email deve estar em formato válido
+    ...    - As datas devem estar no formato ISO 8601
+    [Tags]    data_validation    positive    regression    GET-CLIENT-63
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    ${client}=    Set Variable    ${response.json()}
+    Validate Client Data Formats    ${client}
+
+# GET-CLIENT-64 - Validação de Valores Limites
+GET-CLIENT-64 - Validate Field Length Limits - client list
+    [Documentation]    Validar limites de tamanho dos campos
+    ...
+    ...    ID: GET-CLIENT-64
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então os campos devem respeitar os limites de tamanho
+    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+    ${response}=    Get Clients
+    ${clients}=    Set Variable    ${response.json()}
+    FOR    ${client}    IN    @{clients}
+        Validate Field Length Limits - client    ${client}
+    END
+
+# GET-CLIENT-64 - Validação de Valores Limites
+GET-CLIENT-64 - Validate Field Length Limits - client by id
+    [Documentation]    Validar limites de tamanho dos campos
+    ...
+    ...    ID: GET-CLIENT-64
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então os campos devem respeitar os limites de tamanho
+    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    ${client}=    Set Variable    ${response.json()}
+    Validate Field Length Limits - client    ${client}
+
+# GET-CLIENT-65 - Validação de Caracteres Especiais
+GET-CLIENT-65 - Validate Special Characters In Fields - client list
+    [Documentation]    Validar tratamento de caracteres especiais nos campos
+    ...
+    ...    ID: GET-42
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então os campos devem tratar adequadamente caracteres especiais
+    [Tags]    data_validation    negative    regression    GET-CLIENT-65
+    ${response}=    Get Clients
+    ${clients}=    Set Variable    ${response.json()}
+
+    FOR    ${client}    IN    @{clients}
+        Validate Special Characters - client    ${clients}
+    END
 
 ## GET-CLIENT-66 - Validação de Caracteres Especiais
 #GET-CLIENT-66 - Validate Special Characters In Fields - client by id

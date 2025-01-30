@@ -857,3 +857,83 @@ Validate Client Data Types
 
     # Log para debug
     Log    Tipos de dados validados para cliente: ${client['id']}    level=DEBUG
+
+Validate Required Client Fields
+    [Arguments]    ${client}
+    [Documentation]    Valida presença de campos obrigatórios e se os valores não estão vazios
+
+    # Lista de campos obrigatórios (usando camelCase conforme API)
+    @{required_fields}=    Create List    id    clientKey    enabled    createdAt    updatedAt    groups
+
+    FOR    ${field}    IN    @{required_fields}
+        Dictionary Should Contain Key    ${client}    ${field}
+        ${value}=    Get From Dictionary    ${client}    ${field}
+        ${value_as_string}=    Convert To String    ${value}
+        Should Not Be Empty    ${value_as_string}    msg=O campo obrigatório '${field}' está vazio ou nulo!
+    END
+
+    Log    Campos obrigatórios validados para o cliente: ${client['id']}    level=DEBUG
+
+Validate Client Data Formats
+    [Arguments]    ${client}
+    [Documentation]    Valida formatos específicos dos dados
+
+    # Valida formato de email (se não for nulo)
+    ${email}=    Set Variable    ${client}[email]
+    IF    $email is not None
+        Should Match Regexp    ${client}[email]    ^[^@]+@[^@]+\\.[^@]+$
+    END
+
+    # Valida formato de datas
+    Should Match Regexp    ${client}[createdAt]    ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}
+    Should Match Regexp    ${client}[updatedAt]    ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}
+
+    # Valida formato da clientKey
+    Should Match Regexp    ${client}[clientKey]    ^[A-Za-z0-9_-]+$
+
+    Log    Formatos de dados validados para usuário: ${client['id']}    level=DEBUG
+
+Validate Field Length Limits - client
+    [Arguments]    ${client}
+    [Documentation]    Valida limites de tamanho dos campos
+
+    # Valida tamanho máximo do nome do grupo
+    FOR    ${group}    IN    @{client}[groups]
+        ${name_length}=    Get Length    ${group}[name]
+        Should Be True    ${name_length} <= 100    Campo 'name' excede o limite de 100 caracteres
+    END
+
+    # Valida tamanho máximo do email (se não for nulo)
+    ${email}=    Set Variable    ${client}[email]
+    IF    $email is not None
+        ${email_length}=    Get Length    ${email}
+        Should Be True    ${email_length} <= 255    Campo 'email' excede o limite de 255 caracteres
+    END
+
+    Log    Limites de tamanho validados para usuário: ${client['id']}    level=DEBUG
+
+Validate Special Characters - client
+    [Arguments]    ${clients}
+    [Documentation]    Valida tratamento de caracteres especiais
+
+    # Lista de caracteres especiais para verificar
+    @{special_chars}=    Create List    á    é    í    ó    ú    ñ    ç    @    \#    $
+
+    # Percorre cada cliente da resposta da API
+    FOR    ${client}    IN    @{clients}
+        ${groups}=    Get From Dictionary    ${client}    groups
+
+        # Verifica se o cliente possui grupos cadastrados
+        IF    ${groups} != []
+            FOR    ${group}    IN    @{groups}
+                ${group_name}=    Get From Dictionary    ${group}    name
+                # Verifica se o nome do grupo aceita caracteres especiais
+                FOR    ${char}    IN    @{special_chars}
+                    ${contains_char}=    Run Keyword And Return Status
+                    ...    Should Not Contain    ${group_name}    ${char}
+                    Run Keyword If    not ${contains_char}
+                    ...    Log    Nome do grupo contém caractere especial '${char}': ${group_name} (Cliente ID: ${client['id']})
+                END
+            END
+        END
+    END
