@@ -15,7 +15,7 @@ Get Clients
     [Arguments]    ${index}=${EMPTY}    ${args}=${EMPTY}
     [Documentation]    Executa GET /clients para listar todos os clientes
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients
     ...    headers=${HEADERS}
     ...    expected_status=200
@@ -25,7 +25,7 @@ Get Client By ID
     [Arguments]    ${client_id}    ${expected_status}
     [Documentation]    Executa GET /clients/{id} para buscar os detalhes de um cliente com ID específico
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/${client_id}
     ...    headers=${HEADERS}
     ...    expected_status=${expected_status}
@@ -39,7 +39,7 @@ Get Clients With Pagination
     ...    page=${page}
     ...    per_page=${per_page}
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients
     ...    headers=${headers}
     ...    params=${params}
@@ -51,7 +51,7 @@ Get Clients Without Token
     ${headers}=    Create Dictionary
 
     ${response}=    GET On Session
-    ...    alias=user_no_auth
+    ...    alias=client_no_auth
     ...    url=${BASE_URL}/clients
     ...    headers=${headers}
     ...    expected_status=401
@@ -64,7 +64,7 @@ Get Client By ID Without Token
     ${headers}=    Create Dictionary
 
     ${response}=    GET On Session
-    ...    alias=user_no_auth
+    ...    alias=client_no_auth
     ...    url=${BASE_URL}/clients/${client_id}
     ...    headers=${headers}
     ...    expected_status=401
@@ -79,7 +79,7 @@ Get Clients With Invalid Request
     ...    Content-Type=application/json
 
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/${invalid_id}
     ...    headers=${headers}
     ...    expected_status=400
@@ -89,7 +89,7 @@ Get Clients With Invalid Request
 Get Non Existent Client
     [Documentation]    Executa GET /clients para um cliente inexistente
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/0
     ...    headers=${HEADERS}
     ...    expected_status=404
@@ -101,7 +101,7 @@ Get Clients With Server Error
     ...    x-api-key=${HEADERS}[x-api-key]
     ...    Content-Type=application/json
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/9999999999
     ...    headers=${headers}
     ...    expected_status=500
@@ -112,7 +112,7 @@ Get Clients With Invalid Key
     [Documentation]    Executa GET /clients com token inválido
     ${headers}=    Create Dictionary    x-api-key=invalid_key
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients
     ...    headers=${headers}
     ...    expected_status=401
@@ -123,7 +123,7 @@ Get Client By ID With Invalid Key
     [Arguments]    ${client_id}
     ${headers}=    Create Dictionary    x-api-key=invalid_key
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/${client_id}
     ...    headers=${headers}
     ...    expected_status=401
@@ -134,7 +134,7 @@ Get Clients With Filter
     [Documentation]    Executa GET /clients com filtro
     ${params}=    Create Dictionary    ${field}=${value}
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients
     ...    headers=${HEADERS}
     ...    params=${params}
@@ -205,7 +205,7 @@ Get Clients With ETag
     ...    x-api-key=${HEADERS}[x-api-key]
     ...    If-None-Match=${etag}
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients
     ...    headers=${headers}
     ...    expected_status=any
@@ -218,7 +218,7 @@ Get Client By ID With ETag
     ...    x-api-key=${HEADERS}[x-api-key]
     ...    If-None-Match=${etag}
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/${client_id}
     ...    headers=${headers}
     ...    expected_status=any
@@ -542,7 +542,7 @@ Validate Filter Response - client
     # Log para debug
     Log    Filtro testado: ${search_parameter}    level=INFO
     Log    Termo pesquisado: ${search_term}    level=DEBUG
-    Log    Usuários retornados: ${clients}    level=DEBUG
+    Log    Clientes retornados: ${clients}    level=DEBUG
 
 Test Case Insensitive Search - client
     [Arguments]    ${search_parameter}    ${search_term}
@@ -730,7 +730,7 @@ Get Clients With Cache
     ...    x-api-key=${HEADERS}[x-api-key]
     ...    If-None-Match=${etag}
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients
     ...    headers=${headers}
     ...    expected_status=any
@@ -743,7 +743,7 @@ Get Client By ID With Cache
     ...    x-api-key=${HEADERS}[x-api-key]
     ...    If-None-Match=${etag}
     ${response}=    GET On Session
-    ...    alias=user
+    ...    alias=client
     ...    url=${BASE_URL}/clients/${client_id}
     ...    headers=${headers}
     ...    expected_status=any
@@ -891,7 +891,7 @@ Validate Client Data Formats
     # Valida formato da clientKey
     Should Match Regexp    ${client}[clientKey]    ^[A-Za-z0-9_-]+$
 
-    Log    Formatos de dados validados para usuário: ${client['id']}    level=DEBUG
+    Log    Formatos de dados validados para o cliente: ${client['id']}    level=DEBUG
 
 Validate Field Length Limits - client
     [Arguments]    ${client}
@@ -910,7 +910,7 @@ Validate Field Length Limits - client
         Should Be True    ${email_length} <= 255    Campo 'email' excede o limite de 255 caracteres
     END
 
-    Log    Limites de tamanho validados para usuário: ${client['id']}    level=DEBUG
+    Log    Limites de tamanho validados para o cliente: ${client['id']}    level=DEBUG
 
 Validate Special Characters - all clients
     [Arguments]    ${clients}

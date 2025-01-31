@@ -580,7 +580,7 @@ GET-CLIENT-33 - Validate Response Time For Nonexistent Client - client by id
     ...    Então o tempo de resposta deve ser menor que 0.5 segundos
     [Tags]    performance    negative    sla_0.5s    known_issue    GET-CLIENT-33
     ${response}    ${response_time}=    Get Response Time For Single Client    client_id=0    expected_status=404
-    Validate Response Time - client    ${response_time}    0.8
+    Validate Response Time - client    ${response_time}    0.5
     Status Should Be    404    ${response}
     Validate Response Has Content - client    ${response}
 
@@ -1008,42 +1008,18 @@ GET-CLIENT-55 - Validate Rate Limiting - client by id
         Should Contain    ${response.headers}    X-RateLimit-Reset
     END
 
-# ESTOU EM DUVIDA
-## GET-CLIENT-56 - Validação de Proteção de Dados
-#GET-CLIENT-56 - Validate Data Protection - client list
-#    [Documentation]    Validar proteção de dados sensíveis
-#    ...
-#    ...    ID: GET-CLIENT-56
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então os dados sensíveis devem estar mascarados
-#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-56
-
-# ESTOU EM DUVIDA
-## GET-CLIENT-57 - Validação de Proteção de Dados
-#GET-CLIENT-57 - Validate Data Protection - client list
-#    [Documentation]    Validar proteção de dados sensíveis
-#    ...
-#    ...    ID: GET-CLIENT-57
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então os dados sensíveis devem estar mascarados
-#    [Tags]    security    negative    regression    known_issue    GET-CLIENT-57
-
 ### TESTES DE VALIDAÇÃO DE DADOS ###
 
-# GET-CLIENT-58 - Validação de Tipos de Dados
-GET-CLIENT-58 - Validate Data Types - cliet list
+# GET-CLIENT-56 - Validação de Tipos de Dados
+GET-CLIENT-56 - Validate Data Types - cliet list
     [Documentation]    Validar se os tipos de dados dos campos estão corretos
     ...
-    ...    ID: GET-CLIENT-58
+    ...    ID: GET-CLIENT-56
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients
     ...    Então os tipos de dados dos campos devem estar corretos
-    [Tags]    data_validation    positive    regression    GET-CLIENT-58
+    [Tags]    data_validation    positive    regression    GET-CLIENT-56
     ${response}=    Get Clients
     ${clients}=    Set Variable    ${response.json()}
 
@@ -1051,30 +1027,30 @@ GET-CLIENT-58 - Validate Data Types - cliet list
         Validate Client Data Types    ${client}
     END
 
-# GET-CLIENT-59 - Validação de Tipos de Dados
-GET-CLIENT-59 - Validate Data Types - cliet by id
+# GET-CLIENT-57 - Validação de Tipos de Dados
+GET-CLIENT-57 - Validate Data Types - cliet by id
     [Documentation]    Validar se os tipos de dados dos campos estão corretos
     ...
-    ...    ID: GET-CLIENT-59
+    ...    ID: GET-CLIENT-57
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients/{id}
     ...    Então os tipos de dados dos campos devem estar corretos
-    [Tags]    data_validation    positive    regression    GET-CLIENT-59
+    [Tags]    data_validation    positive    regression    GET-CLIENT-57
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     ${client}=    Set Variable    ${response.json()}
     Validate Client Data Types    ${client}
 
-# GET-CLIENT-60 - Validação de Campos Obrigatórios
-GET-CLIENT-60 - Validate Required Fields - client list
+# GET-CLIENT-58 - Validação de Campos Obrigatórios
+GET-CLIENT-58 - Validate Required Fields - client list
     [Documentation]    Validar se todos os campos obrigatórios estão presentes
     ...
-    ...    ID: GET-CLIENT-60
+    ...    ID: GET-CLIENT-58
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients
     ...    Então todos os campos obrigatórios devem estar presentes
-    [Tags]    data_validation    positive    regression    GET-CLIENT-60
+    [Tags]    data_validation    positive    regression    GET-CLIENT-58
     ${response}=    Get Clients
     ${clients}=    Set Variable    ${response.json()}
 
@@ -1082,25 +1058,25 @@ GET-CLIENT-60 - Validate Required Fields - client list
         Validate Required Client Fields    ${client}
     END
 
-# GET-CLIENT-61 - Validação de Campos Obrigatórios
-GET-CLIENT-61 - Validate Required Fields - client by id
+# GET-CLIENT-59 - Validação de Campos Obrigatórios
+GET-CLIENT-59 - Validate Required Fields - client by id
     [Documentation]    Validar se todos os campos obrigatórios estão presentes
     ...
-    ...    ID: GET-CLIENT-61
+    ...    ID: GET-CLIENT-59
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients/{id}
     ...    Então todos os campos obrigatórios devem estar presentes
-    [Tags]    data_validation    positive    regression    GET-CLIENT-61
+    [Tags]    data_validation    positive    regression    GET-CLIENT-59
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     ${client}=    Set Variable    ${response.json()}
     Validate Required Client Fields    ${client}
 
-# GET-CLIENT-62 - Validação de Formatos de Dados
-GET-CLIENT-62 - Validate Data Formats - client list
+# GET-CLIENT-60 - Validação de Formatos de Dados
+GET-CLIENT-60 - Validate Data Formats - client list
     [Documentation]    Validar se os formatos dos dados retornados estão corretos
     ...
-    ...    ID: GET-CLIENT-62
+    ...    ID: GET-CLIENT-60
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients
@@ -1109,7 +1085,7 @@ GET-CLIENT-62 - Validate Data Formats - client list
     ...    - A clientKey deve estar no formato UUID
     ...    - O email deve estar em formato válido
     ...    - As datas devem estar no formato ISO 8601
-    [Tags]    data_validation    positive    regression    GET-CLIENT-62
+    [Tags]    data_validation    positive    regression    GET-CLIENT-60
     ${response}=    Get Clients
     ${clients}=    Set Variable    ${response.json()}
 
@@ -1117,11 +1093,11 @@ GET-CLIENT-62 - Validate Data Formats - client list
         Validate Client Data Formats    ${client}
     END
 
-# GET-CLIENT-63 - Validação de Formatos de Dados
-GET-CLIENT-63 - Validate Data Formats - client by id
+# GET-CLIENT-61 - Validação de Formatos de Dados
+GET-CLIENT-61 - Validate Data Formats - client by id
     [Documentation]    Validar se os formatos dos dados retornados estão corretos
     ...
-    ...    ID: GET-CLIENT-63
+    ...    ID: GET-CLIENT-61
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients/{id}
@@ -1130,51 +1106,51 @@ GET-CLIENT-63 - Validate Data Formats - client by id
     ...    - A clientKey deve estar no formato UUID
     ...    - O email deve estar em formato válido
     ...    - As datas devem estar no formato ISO 8601
-    [Tags]    data_validation    positive    regression    GET-CLIENT-63
+    [Tags]    data_validation    positive    regression    GET-CLIENT-61
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     ${client}=    Set Variable    ${response.json()}
     Validate Client Data Formats    ${client}
 
-# GET-CLIENT-64 - Validação de Valores Limites
-GET-CLIENT-64 - Validate Field Length Limits - client list
+# GET-CLIENT-62 - Validação de Valores Limites
+GET-CLIENT-62 - Validate Field Length Limits - client list
     [Documentation]    Validar limites de tamanho dos campos
     ...
-    ...    ID: GET-CLIENT-64
+    ...    ID: GET-CLIENT-62
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients
     ...    Então os campos devem respeitar os limites de tamanho
-    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+    [Tags]    data_validation    negative    regression    GET-CLIENT-62
     ${response}=    Get Clients
     ${clients}=    Set Variable    ${response.json()}
     FOR    ${client}    IN    @{clients}
         Validate Field Length Limits - client    ${client}
     END
 
-# GET-CLIENT-64 - Validação de Valores Limites
-GET-CLIENT-64 - Validate Field Length Limits - client by id
+# GET-CLIENT-63 - Validação de Valores Limites
+GET-CLIENT-63 - Validate Field Length Limits - client by id
     [Documentation]    Validar limites de tamanho dos campos
     ...
-    ...    ID: GET-CLIENT-64
+    ...    ID: GET-CLIENT-63
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients/{id}
     ...    Então os campos devem respeitar os limites de tamanho
-    [Tags]    data_validation    negative    regression    GET-CLIENT-64
+    [Tags]    data_validation    negative    regression    GET-CLIENT-63
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     ${client}=    Set Variable    ${response.json()}
     Validate Field Length Limits - client    ${client}
 
-# GET-CLIENT-65 - Validação de Caracteres Especiais
-GET-CLIENT-65 - Validate Special Characters In Fields - client list
+# GET-CLIENT-64 - Validação de Caracteres Especiais
+GET-CLIENT-64 - Validate Special Characters In Fields - client list
     [Documentation]    Validar tratamento de caracteres especiais nos campos
     ...
-    ...    ID: GET-42
+    ...    ID: GET-CLIENT-64
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients
     ...    Então os campos devem tratar adequadamente caracteres especiais
-    [Tags]    data_validation    negative    regression    GET-CLIENT-65
+    [Tags]    data_validation    negative    regression    GET-CLIENT-64
     ${response}=    Get Clients
     ${clients}=    Set Variable    ${response.json()}
 
@@ -1182,46 +1158,46 @@ GET-CLIENT-65 - Validate Special Characters In Fields - client list
         Validate Special Characters - all clients    ${clients}
     END
 
-# GET-CLIENT-66 - Validação de Caracteres Especiais
-GET-CLIENT-66 - Validate Special Characters In Fields - client by id
+# GET-CLIENT-65 - Validação de Caracteres Especiais
+GET-CLIENT-65 - Validate Special Characters In Fields - client by id
     [Documentation]    Validar tratamento de caracteres especiais nos campos
     ...
-    ...    ID: GET-CLIENT-66
+    ...    ID: GET-CLIENT-65
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients/{id}
     ...    Então os campos devem tratar adequadamente caracteres especiais
-    [Tags]    data_validation    negative    regression    GET-CLIENT-66
+    [Tags]    data_validation    negative    regression    GET-CLIENT-65
     ${response}=    Get Client By ID    client_id=1    expected_status=200
     ${client}=    Set Variable    ${response.json()}
     Validate Special Characters - single client    ${client}
 
-# GET-CLIENT-67 - Validação de Campos Opcionais
-GET-CLIENT-67 - Validate Optional Fields - client list
+# GET-CLIENT-66 - Validação de Campos Opcionais
+GET-CLIENT-66 - Validate Optional Fields - client list
     [Documentation]    Validar campos opcionais quando presentes
     ...
-    ...    ID: GET-CLIENT-67
+    ...    ID: GET-CLIENT-66
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients
     ...    Então os campos opcionais devem estar presentes quando aplicável
-    [Tags]    data_validation    positive    regression    GET-CLIENT-67
+    [Tags]    data_validation    positive    regression    GET-CLIENT-66
     ${response}=    Get Clients
     ${clients}=    Set Variable    ${response.json()}
     FOR    ${client}    IN    @{clients}
         Validate Optional Fields Clients    ${client}
     END
 
-# GET-CLIENT-68 - Validação de Campos Opcionais
-GET-CLIENT-68 - Validate Optional Fields - client by id
+# GET-CLIENT-67 - Validação de Campos Opcionais
+GET-CLIENT-67 - Validate Optional Fields - client by id
     [Documentation]    Validar campos opcionais quando presentes
     ...
-    ...    ID: GET-CLIENT-68
+    ...    ID: GET-CLIENT-67
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para /clients/{id}
     ...    Então os campos opcionais devem estar presentes quando aplicável
-    [Tags]    data_validation    positive    regression    GET-CLIENT-68
+    [Tags]    data_validation    positive    regression    GET-CLIENT-67
     ${response}=    Get Client By ID    client_id=3    expected_status=200
     ${client}=    Set Variable    ${response.json()}
     Validate Optional Fields Clients    ${client}
