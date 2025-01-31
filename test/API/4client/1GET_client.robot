@@ -1179,38 +1179,49 @@ GET-CLIENT-65 - Validate Special Characters In Fields - client list
     ${clients}=    Set Variable    ${response.json()}
 
     FOR    ${client}    IN    @{clients}
-        Validate Special Characters - client    ${clients}
+        Validate Special Characters - all clients    ${clients}
     END
 
-## GET-CLIENT-66 - Validação de Caracteres Especiais
-#GET-CLIENT-66 - Validate Special Characters In Fields - client by id
-#    [Documentation]    Validar tratamento de caracteres especiais nos campos
-#    ...
-#    ...    ID: GET-CLIENT-66
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então os campos devem tratar adequadamente caracteres especiais
-#    [Tags]    data_validation    negative    regression    GET-CLIENT-66
+# GET-CLIENT-66 - Validação de Caracteres Especiais
+GET-CLIENT-66 - Validate Special Characters In Fields - client by id
+    [Documentation]    Validar tratamento de caracteres especiais nos campos
+    ...
+    ...    ID: GET-CLIENT-66
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então os campos devem tratar adequadamente caracteres especiais
+    [Tags]    data_validation    negative    regression    GET-CLIENT-66
+    ${response}=    Get Client By ID    client_id=1    expected_status=200
+    ${client}=    Set Variable    ${response.json()}
+    Validate Special Characters - single client    ${client}
 
-## GET-CLIENT-67 - Validação de Campos Opcionais
-#GET-CLIENT-67 - Validate Optional Fields - client list
-#    [Documentation]    Validar campos opcionais quando presentes
-#    ...
-#    ...    ID: GET-CLIENT-67
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients
-#    ...    Então os campos opcionais devem estar presentes quando aplicável
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-67
-#
-## GET-CLIENT-68 - Validação de Campos Opcionais
-#GET-CLIENT-68 - Validate Optional Fields - client list
-#    [Documentation]    Validar campos opcionais quando presentes
-#    ...
-#    ...    ID: GET-CLIENT-68
-#    ...
-#    ...    Dado que tenho um token de autenticação válido
-#    ...    Quando faço uma requisição GET para /clients/{id}
-#    ...    Então os campos opcionais devem estar presentes quando aplicável
-#    [Tags]    data_validation    positive    regression    GET-CLIENT-68
+# GET-CLIENT-67 - Validação de Campos Opcionais
+GET-CLIENT-67 - Validate Optional Fields - client list
+    [Documentation]    Validar campos opcionais quando presentes
+    ...
+    ...    ID: GET-CLIENT-67
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients
+    ...    Então os campos opcionais devem estar presentes quando aplicável
+    [Tags]    data_validation    positive    regression    GET-CLIENT-67
+    ${response}=    Get Clients
+    ${clients}=    Set Variable    ${response.json()}
+    FOR    ${client}    IN    @{clients}
+        Validate Optional Fields Clients    ${client}
+    END
+
+# GET-CLIENT-68 - Validação de Campos Opcionais
+GET-CLIENT-68 - Validate Optional Fields - client by id
+    [Documentation]    Validar campos opcionais quando presentes
+    ...
+    ...    ID: GET-CLIENT-68
+    ...
+    ...    Dado que tenho um token de autenticação válido
+    ...    Quando faço uma requisição GET para /clients/{id}
+    ...    Então os campos opcionais devem estar presentes quando aplicável
+    [Tags]    data_validation    positive    regression    GET-CLIENT-68
+    ${response}=    Get Client By ID    client_id=3    expected_status=200
+    ${client}=    Set Variable    ${response.json()}
+    Validate Optional Fields Clients    ${client}

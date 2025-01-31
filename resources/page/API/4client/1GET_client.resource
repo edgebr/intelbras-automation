@@ -912,7 +912,7 @@ Validate Field Length Limits - client
 
     Log    Limites de tamanho validados para usuário: ${client['id']}    level=DEBUG
 
-Validate Special Characters - client
+Validate Special Characters - all clients
     [Arguments]    ${clients}
     [Documentation]    Valida tratamento de caracteres especiais
 
@@ -934,6 +934,50 @@ Validate Special Characters - client
                     Run Keyword If    not ${contains_char}
                     ...    Log    Nome do grupo contém caractere especial '${char}': ${group_name} (Cliente ID: ${client['id']})
                 END
+            END
+        END
+    END
+
+Validate Special Characters - single client
+    [Arguments]    ${client}
+    [Documentation]    Valida tratamento de caracteres especiais em um único cliente retornado pela API
+
+    # Lista de caracteres especiais para verificar
+    @{special_chars}=    Create List    á    é    í    ó    ú    ñ    ç    @    \#    $
+
+    # Verifica se o cliente possui grupos cadastrados
+    ${groups}=    Get From Dictionary    ${client}    groups
+
+    IF    ${groups} != []
+        FOR    ${group}    IN    @{groups}
+            ${group_name}=    Get From Dictionary    ${group}    name
+
+            # Verifica se o nome do grupo aceita caracteres especiais
+            FOR    ${char}    IN    @{special_chars}
+                ${contains_char}=    Run Keyword And Return Status
+                ...    Should Not Contain    ${group_name}    ${char}
+                Run Keyword If    not ${contains_char}
+                ...    Log    Nome do grupo contém caractere especial '${char}': ${group_name} (Cliente ID: ${client['id']})
+            END
+        END
+    END
+
+Validate Optional Fields Clients
+    [Arguments]    ${client}
+    [Documentation]    Valida campos opcionais quando presentes
+
+    # Lista de campos opcionais
+    @{optional_fields}=    Create List    email    applicationId
+
+    FOR    ${field}    IN    @{optional_fields}
+        ${has_field}=    Run Keyword And Return Status
+        ...    Dictionary Should Contain Key    ${client}    ${field}
+
+        IF    ${has_field}
+            ${field_value}=    Get From Dictionary    ${client}    ${field}
+
+            IF    "${field_value}" != "None" and "${field_value}" != ""
+                Log    Campo opcional '${field}' presente e válido
             END
         END
     END
