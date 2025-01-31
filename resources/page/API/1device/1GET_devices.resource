@@ -54,7 +54,7 @@ Validate Device Status Code 400
 
 Get Device Not Found
     [Documentation]    Executa GET /devices com ID inexistente
-    ${invalid_id}=    Set Variable    999999
+    ${invalid_id}=    Set Variable    0
     ${response}=    GET On Session    
     ...    alias=device    
     ...    url=${DEVICE_ENDPOINT}/${invalid_id}    
@@ -64,12 +64,12 @@ Get Device Not Found
 
 Validate Device Status Code 404
     [Arguments]    ${response}
-    [Documentation]    Valida que o código de status é 404 e as mensagens de erro
+    [Documentation]    Valida que o código de status é 404 e a mensagem de erro
     ${status_code}=    Convert To String    ${response.status_code}
     Should Be Equal As Strings    ${status_code}    404
     
     ${response_json}=    Set Variable    ${response.json()}
-    Should Be Equal    ${response_json}[message]    Cannot GET /devices/999999
+    Should Be Equal    ${response_json}[error]    Device not found
 
 Get Device Internal Server Error
     [Documentation]    Simula uma requisição que causa erro 500 no servidor
