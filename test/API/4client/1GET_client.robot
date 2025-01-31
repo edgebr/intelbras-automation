@@ -149,8 +149,8 @@ GET-CLIENT-7 - Get Clients With Invalid Header - client
     ...    E os detalhes da resposta devem ser registrados
     [Tags]    headers    negative    regression    GET-CLIENT-7
     ${response}=    Get Clients With Invalid Key
-    Validate Status Code 401    ${response}
-    Validate Error Message    ${response}    Invalid token
+    Validate Status Code 401 - client    ${response}
+    Validate Error Message - client    ${response}    Invalid token
     Log Response Details - client    ${response}
 
 # GET-CLIENT-8 - Requisição com header x-api-key válido
@@ -898,12 +898,12 @@ GET-CLIENT-50 - Validate Authentication Security - client list
     ...    E devo receber a mensagem "Invalid token"
     [Tags]    security    negative    regression    GET-CLIENT-50
     ${response}=    Get Clients Without Token
-    Validate Status Code 401    ${response}
-    Validate Error Message    ${response}    Invalid token
+    Validate Status Code 401 - client    ${response}
+    Validate Error Message - client    ${response}    Invalid token
 
     ${response}=    Get Clients With Invalid Key
-    Validate Status Code 401    ${response}
-    Validate Error Message    ${response}    Invalid token
+    Validate Status Code 401 - client    ${response}
+    Validate Error Message - client    ${response}    Invalid token
 
 # GET-CLIENT-51 - Validação de Autenticação
 GET-CLIENT-51 - Validate Authentication Security - client by id
@@ -917,12 +917,12 @@ GET-CLIENT-51 - Validate Authentication Security - client by id
     ...    E devo receber a mensagem "Invalid token"
     [Tags]    security    negative    regression    GET-CLIENT-51
     ${response}=    Get Client By ID Without Token    client_id=1
-    Validate Status Code 401    ${response}
-    Validate Error Message    ${response}    Invalid token
+    Validate Status Code 401 - client    ${response}
+    Validate Error Message - client    ${response}    Invalid token
 
     ${response}=    Get Client By ID With Invalid Key    client_id=1
-    Validate Status Code 401    ${response}
-    Validate Error Message    ${response}    Invalid token
+    Validate Status Code 401 - client    ${response}
+    Validate Error Message - client    ${response}    Invalid token
 
 # GET-CLIENT-52 - Validação de Headers de Segurança
 GET-CLIENT-52 - Validate Security Headers - client list
