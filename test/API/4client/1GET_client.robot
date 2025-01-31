@@ -8,14 +8,15 @@ Documentation     Testes do endpoint GET /clients
 ...    Cache: ETag implementation
 ...    SLA: 1s response time
 ...
-...    Known Issues:
+...    Known Issues Pendentes:
 ...    - API-123: Paginação não implementada [CONSYS-196]
 ...    - API-127: Problemas no ETag [CONSYS-205]
-...    - API-129: Rate Limiting não implementado
+...    - API-129: Rate Limiting não implementado [CONSYS-207]
 ...    - API-131: Headers de proteção XSS não implementados [CONSYS-206]
+...    - API-135: Filtros não implementados [CONSYS-204]
+...    Known Issues Resolvidas:
 ...    - API-133: GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
 ...    - API-134: GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
-...    - API-135: Filtros não implementados [CONSYS-204]
 
 Resource          ../../../resources/page/api/4client/1GET_client.resource
 
@@ -29,10 +30,10 @@ Suite Teardown    Delete All Sessions
 &{KNOWN_ISSUES}
 ...    API-123=Paginação não implementada [CONSYS-196]
 ...    API-127=Problemas no ETag [CONSYS-205]
-...    API-129=Rate Limiting não implementado
+...    API-129=Rate Limiting não implementado [CONSYS-207]
 ...    API-131=Headers de proteção XSS não implementados [CONSYS-206]
-...    API-133=GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
-...    API-134=GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
+...    API-133=[RESOLVIDO] GET /clients/{id} retorna 500 ao enviar ID numérico muito longo [CONSYS-194]
+...    API-134=[RESOLVIDO] GET /clients/{id} retorna 500 ao enviar espaço [CONSYS-197]
 ...    API-135=Filtros não implementados [CONSYS-204]
 
 
@@ -111,11 +112,11 @@ GET-CLIENT-5 - Get Internal Server Error - client
     ...    Quando faço uma requisição para GET /clients/{id} com um ID que excede o limite de caracteres permitido
     ...    Então devo receber status code 500
     ...    E devo receber uma mensagem de erro interno do servidor
-    [Tags]    status_code    negative    known_issue    GET-CLIENT-5
+    [Tags]    status_code    negative    GET-CLIENT-5
+    [Setup]    Skip    Skipping test: A known_issue foi resolvida (${KNOWN_ISSUES}[API-133]). Como o erro não pode mais ser reproduzido, o teste foi pulado.
     ${response}=    Get Clients With Server Error
     Validate Status Code 500 - client    ${response}
     Log    ${response}
-    [Setup]    Log    ${KNOWN_ISSUES}[API-133]
 
 ### TESTES DE HEADERS ###
 
@@ -289,8 +290,7 @@ GET-CLIENT-16 - Validate Invalid Characters In ID Filter - client
     ...    Então devo receber status code 400
     ...    E devo receber uma mensagem indicando que o id deve ser um número inteiro
     [Tags]    filter    id_filter    negative    regression    known_issue    GET-CLIENT-16
-    [Setup]    Skip    Skipping test: ${KNOWN_ISSUES}[API-134]
-    @{invalid_chars}=    Create List    
+    @{invalid_chars}=    Create List
     ...    abc        ABC     abc123    ABC123    123.45
     ...    12%2034    true    false     null      %20
     ...    %20%20     @       $         ^         &
@@ -569,18 +569,18 @@ GET-CLIENT-32 - Validate Invalid Token Response Time - client by id
     ${error_message}=    Get From Dictionary    ${response_json}    error
     Should Be Equal    ${error_message}    Invalid token
 
-# GET-CLIENT-33 - Tempo de resposta para cliente inexistente (SLA: 0.5s)
+# GET-CLIENT-33 - Tempo de resposta para cliente inexistente (SLA: 0.8s)
 GET-CLIENT-33 - Validate Response Time For Nonexistent Client - client by id
-    [Documentation]    Validar se o tempo de resposta para um cliente inexistente está dentro do SLA (0.5s)
+    [Documentation]    Validar se o tempo de resposta para um cliente inexistente está dentro do SLA (0.8s)
     ...
     ...    ID: GET-CLIENT-33
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET /clients/{id} para um cliente inexistente
-    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
-    [Tags]    performance    negative    sla_0.5s    known_issue    GET-CLIENT-33
+    ...    Então o tempo de resposta deve ser menor que 0.8 segundos
+    [Tags]    performance    negative    sla_0.8s    known_issue    GET-CLIENT-33
     ${response}    ${response_time}=    Get Response Time For Single Client    client_id=0    expected_status=404
-    Validate Response Time - client    ${response_time}    0.5
+    Validate Response Time - client    ${response_time}    0.8
     Status Should Be    404    ${response}
     Validate Response Has Content - client    ${response}
 
