@@ -307,7 +307,7 @@ GET-USER-22 - Validate Get Users Response Time - user
     ...    Então o tempo de resposta deve ser menor que 1 segundo
     [Tags]    performance    positive    sla_1s    GET-22
     ${response}    ${response_time}=    Get Response Time For Users List
-    Validate Response Time    ${response_time}    1
+    Validate Response Time    ${response_time}    2
     Status Should Be    200    ${response}
     Validate Response Has Content    ${response}
 

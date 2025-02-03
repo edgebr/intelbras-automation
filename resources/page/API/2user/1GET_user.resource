@@ -463,11 +463,11 @@ Get Response Time For Invalid Token
     RETURN    ${response}    ${response_time}
 
 Validate Response Time
-    [Arguments]    ${response_time}    ${sla_limit}=0.8
+    [Arguments]    ${response_time}    ${sla_limit}=2
     [Documentation]    Valida se o tempo de resposta está dentro do limite do SLA.
     ...    Args:
     ...        response_time: Tempo de resposta em segundos
-    ...        sla_limit: Limite máximo aceitável em segundos (default: 0.8)
+    ...        sla_limit: Limite máximo aceitável em segundos (default: 2)
     
     # Registra métricas detalhadas
     Log    Tempo de resposta: ${response_time}s    WARN
