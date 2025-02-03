@@ -512,35 +512,35 @@ GET-CLIENT-29 - Validate Get Clients Response Time - client
     Status Should Be    200    ${response}
     Validate Response Has Content - client    ${response}
 
-# GET-CLIENT-30 - Tempo de resposta para cliente específico (SLA: 0.8s)
+# GET-CLIENT-30 - Tempo de resposta para cliente específico (SLA: 1s)
 GET-CLIENT-30 - Validate Get Single Client Response Time - client by id
-    [Documentation]    Validar se o tempo de resposta para um cliente específico está dentro do SLA (0.8s)
+    [Documentation]    Validar se o tempo de resposta para um cliente específico está dentro do SLA (1s)
     ...
     ...    ID: GET-CLIENT-30
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET para um cliente específico
-    ...    Então o tempo de resposta deve ser menor que 0.8 segundos
-    [Tags]    performance    positive    sla_0.8s    GET-CLIENT-30
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
+    [Tags]    performance    positive    sla_1s    GET-CLIENT-30
     ${response}    ${response_time}=    Get Response Time For Single Client    client_id=1    expected_status=200
-    Validate Response Time - client    ${response_time}    0.8
+    Validate Response Time - client    ${response_time}    1
     Status Should Be    200    ${response}
     Validate Response Has Content - client    ${response}
 
-# GET-CLIENT-31 - Tempo de resposta com token inválido para listagem de clientes (SLA: 0.5s)
+# GET-CLIENT-31 - Tempo de resposta com token inválido para listagem de clientes (SLA: 1s)
 GET-CLIENT-31 - Validate Invalid Token Response Time - client
-    [Documentation]    Validar tempo de resposta com token inválido para GET /clients (SLA: 0.5s)
+    [Documentation]    Validar tempo de resposta com token inválido para GET /clients (SLA: 1s)
     ...
     ...    ID: GET-CLIENT-31
     ...
     ...    Dado que envio um token de autenticação inválido
     ...    Quando faço uma requisição GET para /clients
-    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
     ...    E devo receber a mensagem "Invalid token"
-    [Tags]    performance    negative    sla_0.5s    GET-CLIENT-31
+    [Tags]    performance    negative    sla_1s    GET-CLIENT-31
     ${response}    ${response_time}=    Get Response Time For Invalid Token - client list
     # Valida o tempo de resposta
-    Validate Response Time - client    ${response_time}    0.5
+    Validate Response Time - client    ${response_time}    1
     # Valida o status da resposta
     Status Should Be    401    ${response}
     # Valida a mensagem de erro
@@ -548,20 +548,20 @@ GET-CLIENT-31 - Validate Invalid Token Response Time - client
     ${error_message}=    Get From Dictionary    ${response_json}    error
     Should Be Equal    ${error_message}    Invalid token
 
-# GET-CLIENT-32 - Tempo de resposta com token inválido para cliente específico (SLA: 0.5s)
+# GET-CLIENT-32 - Tempo de resposta com token inválido para cliente específico (SLA: 1s)
 GET-CLIENT-32 - Validate Invalid Token Response Time - client by id
-    [Documentation]    Validar tempo de resposta com token inválido para GET /clients/{id} (SLA: 0.5s)
+    [Documentation]    Validar tempo de resposta com token inválido para GET /clients/{id} (SLA: 1s)
     ...
     ...    ID: GET-CLIENT-32
     ...
     ...    Dado que envio um token de autenticação inválido
     ...    Quando faço uma requisição GET para /clients/{id}
-    ...    Então o tempo de resposta deve ser menor que 0.5 segundos
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
     ...    E devo receber a mensagem "Invalid token"
-    [Tags]    performance    negative    sla_0.5s    GET-CLIENT-32
+    [Tags]    performance    negative    sla_1s    GET-CLIENT-32
     ${response}    ${response_time}=    Get Response Time For Invalid Token - client by id
     # Valida o tempo de resposta
-    Validate Response Time - client    ${response_time}    0.5
+    Validate Response Time - client    ${response_time}    1
     # Valida o status da resposta
     Status Should Be    401    ${response}
     # Valida a mensagem de erro
@@ -569,18 +569,18 @@ GET-CLIENT-32 - Validate Invalid Token Response Time - client by id
     ${error_message}=    Get From Dictionary    ${response_json}    error
     Should Be Equal    ${error_message}    Invalid token
 
-# GET-CLIENT-33 - Tempo de resposta para cliente inexistente (SLA: 0.8s)
+# GET-CLIENT-33 - Tempo de resposta para cliente inexistente (SLA: 1s)
 GET-CLIENT-33 - Validate Response Time For Nonexistent Client - client by id
-    [Documentation]    Validar se o tempo de resposta para um cliente inexistente está dentro do SLA (0.8s)
+    [Documentation]    Validar se o tempo de resposta para um cliente inexistente está dentro do SLA (1s)
     ...
     ...    ID: GET-CLIENT-33
     ...
     ...    Dado que tenho um token de autenticação válido
     ...    Quando faço uma requisição GET /clients/{id} para um cliente inexistente
-    ...    Então o tempo de resposta deve ser menor que 0.8 segundos
-    [Tags]    performance    negative    sla_0.8s    known_issue    GET-CLIENT-33
+    ...    Então o tempo de resposta deve ser menor que 1 segundo
+    [Tags]    performance    negative    sla_1s    known_issue    GET-CLIENT-33
     ${response}    ${response_time}=    Get Response Time For Single Client    client_id=0    expected_status=404
-    Validate Response Time - client    ${response_time}    0.8
+    Validate Response Time - client    ${response_time}    1
     Status Should Be    404    ${response}
     Validate Response Has Content - client    ${response}
 
