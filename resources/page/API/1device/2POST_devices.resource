@@ -38,7 +38,7 @@ Generate Random Serial Id
     ${part4}=    Evaluate    ''.join([random.choice('${numbers}') for _ in range(3)])    modules=random
     
     ${serialId}=    Set Variable    ${part1}${part2}${part3}${part4}
-    [Return]    ${serialId}
+    RETURN    ${serialId}
 
 Dado Que Tenho Um Payload Valido Para Criacao De Dispositivo
     [Documentation]    Cria um payload válido para criação de dispositivo
@@ -73,6 +73,13 @@ Entao A API Deve Retornar Status 201 Created
 E A Mensagem "${expected_message}"
     [Documentation]    Valida a mensagem retornada pela API
     Should Be Equal As Strings    ${RESPONSE.text}    ${expected_message}
+
+E O Schema Deve Ser "${schema_file}"
+    [Documentation]    Valida se a resposta segue o schema especificado
+    ${schema}=    Get File    ${EXECDIR}/resources/json/POST_DEVICES/${schema_file}
+    ${schema_json}=    Evaluate    json.loads('''${schema}''')    json
+    ${response_json}=    Set Variable    ${RESPONSE.json()}
+    ${is_valid}=    Evaluate    jsonschema.validate(${response_json}, ${schema_json})    modules=jsonschema
 
 Dado Que Envio Um Payload Invalido
     [Documentation]    Cria um payload inválido faltando campo obrigatório serialId
@@ -163,6 +170,7 @@ Entao A API Deve Retornar Status 400 Bad Request
 E A Mensagem De Erro Deve Ser "${expected_message}"
     [Documentation]    Valida se a mensagem de erro é a esperada
     ${body}=    Set Variable    ${RESPONSE.json()}
+    Dictionary Should Contain Key    ${body}    error
     Should Be Equal As Strings    ${body}[error]    ${expected_message}
 
 Dado Que Envio Um Payload Com Multiplos Dispositivos Unicos
@@ -403,3 +411,23 @@ Quando Envio Uma Requisicao POST Para /devices Com Timeout
 Entao A API Deve Retornar Status 504 Gateway Timeout
     [Documentation]    Valida se o status code é 504 Gateway Timeout
     Should Be Equal As Strings    ${RESPONSE.status_code}    504
+
+Dado Que Envio Um Payload Valido Sem Headers Obrigatorios
+    [Documentation]    Cria um payload válido mas sem headers obrigatórios
+    ${serialId}=    Generate Random Serial Id
+    ${device_data}=    Create Dictionary
+    ...    devices=@{EMPTY}
+    ...    productCode=0000000
+    
+    ${device}=    Create Dictionary
+    ...    serialId=${serialId}
+    
+    Append To List    ${device_data}[devices]    ${device}
+    Set Test Variable    ${DEVICE_PAYLOAD}    ${device_data}
+    Set Test Variable    ${CUSTOM_HEADERS}    ${EMPTY}
+
+E A Mensagem De Erro Deve Ser Missing required headers
+    [Documentation]    Valida se a mensagem de erro indica headers faltantes
+    ${body}=    Set Variable    ${RESPONSE.json()}
+    Dictionary Should Contain Key    ${body}    error
+    Should Be Equal As Strings    ${body}[error]    Missing required headers

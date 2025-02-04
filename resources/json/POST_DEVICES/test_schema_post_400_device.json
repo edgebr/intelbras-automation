@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "string",
+      "enum": [
+        "Device already exists",
+        "Invalid payload format",
+        "All devices already exist"
+      ]
+    },
+    "message": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "statusCode": {
+      "type": "integer",
+      "enum": [400]
+    }
+  },
+  "required": ["error"]
+} 
