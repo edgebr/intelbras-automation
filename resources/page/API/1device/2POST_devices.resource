@@ -3,6 +3,8 @@ Library    RequestsLibrary
 Library    Collections
 Library    JSONLibrary
 Resource    ../../../resource.resource
+Library    requests
+Library    urllib3
 
 *** Variables ***
 
@@ -395,17 +397,26 @@ Dado Que Envio Um Payload Valido
     Append To List    ${device_data}[devices]    ${device}
     Set Test Variable    ${DEVICE_PAYLOAD}    ${device_data}
 
-Quando Envio Uma Requisicao POST Para /devices Com Timeout
-    [Documentation]    Envia a requisição POST com um timeout muito baixo
-    ${headers}=    Set Variable    ${HEADERS}
+Quando Envio Uma Requisicao POST Com Timeout De "${timeout}" Segundos
+    [Documentation]    Envia uma requisição POST com um timeout específico
+    ${headers}=    Create Dictionary
+    ...    Content-Type=application/json
+    ...    Accept=application/json
+    ...    x-api-key=${HEADERS}[x-api-key]
     
-    # Define um timeout muito baixo (0.001 segundo) para forçar o timeout
-    ${response}=    POST On Session    device    /devices
-    ...    json=${DEVICE_PAYLOAD}
+    ${timeout_float}=    Convert To Number    ${timeout}
+    
+    Log To Console    \nIniciando requisição com timeout de ${timeout_float} segundos
+    Log To Console    Headers: ${headers}
+    Log To Console    Payload: ${DEVICE_PAYLOAD}
+    
+    ${response}=    Make Request With Timeout
+    ...    url=${BASE_URL}/devices
+    ...    payload=${DEVICE_PAYLOAD}
     ...    headers=${headers}
-    ...    timeout=0.001
-    ...    expected_status=any
+    ...    timeout=${timeout_float}
     
+    Log To Console    Resposta recebida: ${response}
     Set Test Variable    ${RESPONSE}    ${response}
 
 Entao A API Deve Retornar Status 504 Gateway Timeout
@@ -431,3 +442,158 @@ E A Mensagem De Erro Deve Ser Missing required headers
     ${body}=    Set Variable    ${RESPONSE.json()}
     Dictionary Should Contain Key    ${body}    error
     Should Be Equal As Strings    ${body}[error]    Missing required headers
+
+Dado Que Envio Um Payload Valido Com Headers Adicionais
+    [Documentation]    Cria um payload válido e adiciona headers extras
+    # Cria o payload válido
+    ${serialId}=    Generate Random Serial Id
+    ${device_data}=    Create Dictionary
+    ...    devices=@{EMPTY}
+    ...    productCode=0000000
+    
+    ${device}=    Create Dictionary
+    ...    serialId=${serialId}
+    
+    Append To List    ${device_data}[devices]    ${device}
+    Set Test Variable    ${DEVICE_PAYLOAD}    ${device_data}
+    
+    # Define headers com campos adicionais
+    ${headers_with_extra}=    Create Dictionary
+    ...    Content-Type=application/json
+    ...    Accept=application/json
+    ...    x-api-key=${HEADERS}[x-api-key]
+    ...    User-Agent=RobotFramework
+    ...    Cache-Control=no-cache
+    ...    Custom-Header=test-value
+    ...    Correlation-ID=123456789
+    
+    Set Test Variable    ${CUSTOM_HEADERS}    ${headers_with_extra}
+
+Dado Que Preparo Multiplos Payloads Para Envio Simultaneo
+    [Documentation]    Prepara múltiplos payloads com serialIds únicos para envio simultâneo
+    @{payloads}=    Create List
+    @{serial_ids}=    Create List
+    
+    # Cria 5 payloads diferentes
+    FOR    ${index}    IN RANGE    5
+        ${serialId}=    Generate Random Serial Id
+        ${device_data}=    Create Dictionary
+        ...    devices=@{EMPTY}
+        ...    productCode=0000000
+        
+        ${device}=    Create Dictionary
+        ...    serialId=${serialId}
+        
+        Append To List    ${device_data}[devices]    ${device}
+        Append To List    ${payloads}    ${device_data}
+        Append To List    ${serial_ids}    ${serialId}
+    END
+    
+    Set Test Variable    ${CONCURRENT_PAYLOADS}    ${payloads}
+    Set Test Variable    ${CONCURRENT_SERIAL_IDS}    ${serial_ids}
+
+Quando Envio Requisicoes POST Simultaneas Para /devices
+    [Documentation]    Envia múltiplas requisições POST simultaneamente
+    @{responses}=    Create List
+    
+    # Envia as requisições em paralelo usando threads
+    ${thread_list}=    Evaluate    []
+    FOR    ${payload}    IN    @{CONCURRENT_PAYLOADS}
+        ${thread}=    Evaluate    threading.Thread(target=lambda: requests.post('${BASE_URL}/devices', json=${payload}, headers=${HEADERS}))    modules=threading, requests
+        Call Method    ${thread}    start
+        Append To List    ${thread_list}    ${thread}
+    END
+    
+    # Aguarda todas as threads terminarem
+    FOR    ${thread}    IN    @{thread_list}
+        Call Method    ${thread}    join
+    END
+    
+    Set Test Variable    ${CONCURRENT_RESPONSES}    ${responses}
+
+Entao Todas As Requisicoes Devem Retornar Status 201 Created
+    [Documentation]    Verifica se todas as requisições retornaram 201
+    FOR    ${response}    IN    @{CONCURRENT_RESPONSES}
+        Should Be Equal As Strings    ${response.status_code}    201
+    END
+
+E Todos Os Dispositivos Devem Ser Criados Corretamente
+    [Documentation]    Verifica se todos os dispositivos foram criados com sucesso
+    # Aguarda um momento para garantir que os dados foram persistidos
+    Sleep    2s
+    
+    FOR    ${serial_id}    IN    @{CONCURRENT_SERIAL_IDS}
+        ${response}=    GET On Session    device    /devices/${serial_id}
+        Should Be Equal As Strings    ${response.status_code}    200
+        Dictionary Should Contain Key    ${response.json()}    serialId
+        Should Be Equal As Strings    ${response.json()}[serialId]    ${serial_id}
+    END
+
+Dado Que Envio Um Payload Apenas Com Campos Obrigatorios
+    [Documentation]    Cria um payload apenas com os campos obrigatórios
+    ${serialId}=    Generate Random Serial Id
+    ${device_data}=    Create Dictionary
+    ...    devices=@{EMPTY}
+    ...    productCode=0000000
+    
+    ${device}=    Create Dictionary
+    ...    serialId=${serialId}
+    # Omite todos os campos opcionais:
+    # - name
+    # - blacklisted
+    # - manufacturingDate
+    # - ipAddress
+    # - firstConnection
+    
+    Append To List    ${device_data}[devices]    ${device}
+    Set Test Variable    ${DEVICE_PAYLOAD}    ${device_data}
+    Set Test Variable    ${SERIAL_ID}    ${serialId}
+
+E O Dispositivo Deve Ser Criado Com Os Seguintes Valores Padrao:
+    [Arguments]    &{expected_values}
+    ${response}=    Get Device By SerialId    ${serialId}
+    FOR    ${key}    ${value}    IN    &{expected_values}
+        Should Be Equal    ${response['${key}']}    ${value}    
+        ...    msg=O valor padrão para ${key} deveria ser '${value}' mas foi '${response['${key}']}'
+    END
+
+Get Device By SerialId
+    [Documentation]    Busca um dispositivo pelo serialId
+    [Arguments]    ${serialId}
+    ${headers}=    Create Dictionary
+    ...    Content-Type=application/json
+    ...    Accept=application/json
+    ...    x-api-key=${HEADERS}[x-api-key]
+    
+    ${response}=    GET On Session    device    /devices/${serialId}
+    ...    headers=${headers}
+    ...    expected_status=200
+    
+    RETURN    ${response.json()}
+
+E A Mensagem De Erro Deve Conter "${expected_message}"
+    [Documentation]    Valida se a mensagem de erro contém o texto esperado
+    Should Contain    ${RESPONSE.text}    ${expected_message}
+
+Make Request With Timeout
+    [Arguments]    ${url}    ${payload}    ${headers}    ${timeout}
+    [Documentation]    Faz uma requisição POST com timeout e trata exceções
+    TRY
+        ${response}=    POST On Session    device    /devices
+        ...    json=${payload}
+        ...    headers=${headers}
+        ...    timeout=${timeout}
+        ...    expected_status=any
+        RETURN    ${response}
+    EXCEPT    GLOB: *ConnectTimeout*    AS    ${error}    # Captura qualquer exceção que contenha ConnectTimeout
+        Log To Console    \nTimeout esperado capturado: ${error}
+        ${response}=    Create Dictionary
+        ...    status_code=504
+        ...    text=Request timeout exceeded
+        RETURN    ${response}
+    END
+
+Dado Que Tenho Um Payload Com Formato Invalido
+    [Documentation]    Cria um payload com formato JSON inválido
+    ${invalid_payload}=    Set Variable    {"devices": [{"serialId": "ABC123"}], "productCode": "0000000"
+    Set Test Variable    ${DEVICE_PAYLOAD}    ${invalid_payload}

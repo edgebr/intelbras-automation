@@ -1,14 +1,22 @@
 *** Settings ***
 Documentation     Testes do endpoint POST /devices
 ...    
-...    Endpoint responsável pelo cadastro de dispositivos no sistema.
+...    Este conjunto de testes é responsável por validar o endpoint POST /devices,
+...    que é utilizado para o cadastro de dispositivos no sistema. O objetivo é garantir
+...    que o endpoint funcione corretamente em diversos cenários, incluindo a criação
+...    bem-sucedida de dispositivos, tratamento de erros, e validação de segurança.
 ...    
 ...    Cenários testados:
-...    1. Status Codes (201, 400, 401, 413, 504)
-...    2. Validação de Payload
-...    3. Autenticação e Segurança
-...    4. Múltiplos Dispositivos
-...    5. Headers e Timeout
+...    1. Status Codes (201, 400, 401, 413, 504): Verifica se o endpoint retorna os
+...       códigos de status HTTP corretos para diferentes tipos de requisições.
+...    2. Validação de Payload: Testa a resposta do sistema a payloads válidos e inválidos,
+...       assegurando que apenas dados corretos sejam aceitos.
+...    3. Autenticação e Segurança: Avalia a necessidade de autenticação e a resposta
+...       a tentativas de acesso não autorizado.
+...    4. Múltiplos Dispositivos: Examina a capacidade do sistema de lidar com o cadastro
+...       de múltiplos dispositivos em uma única requisição, incluindo casos de serialIds duplicados.
+...    5. Headers e Timeout: Testa a manipulação de headers obrigatórios e o comportamento
+...       do sistema em situações de timeout.
 ...    
 Resource          ../../../resources/resource.resource
 Resource          ../../../resources/page/api/1device/2POST_devices.resource
@@ -61,6 +69,20 @@ POST-DEVICE-12 - CODE 413 Post Device With Payload Size Exceeded
     Quando Envio Uma Requisicao POST Para /devices
     Entao A API Deve Retornar Status 413 Payload Too Large
     E A Mensagem De Erro Deve Ser "Payload too large"
+
+POST-DEVICE-21 - CODE 504 Post Request Timeout
+    [Documentation]    Testa comportamento da API com requisições que excedem o tempo limite
+    ...    @endpoint: POST /devices
+    ...    @status_code: 504 Gateway Timeout
+    ...    
+    ...    Verifica se a API retorna erro apropriado quando
+    ...    uma requisição excede o tempo limite configurado.
+    [Tags]    POST    DEVICE    ERROR    API    TIMEOUT
+    Skip    [BUG: CONSYS-227] Timeout não está sendo tratado corretamente pela API A requisição falha com ConnectTimeout mas não retorna o status 504 esperado.
+    Dado Que Tenho Um Payload Valido Para Criacao De Dispositivo
+    Quando Envio Uma Requisicao POST Com Timeout De "0.01" Segundos
+    Entao A API Deve Retornar Status 504 Gateway Timeout
+    E A Mensagem De Erro Deve Conter "timeout"
 
 ############# Testes de Validação de Payload #############
 POST-DEVICE-5 - CODE 400 Post Invalid Payload
@@ -116,6 +138,18 @@ POST-DEVICE-13 - CODE 401 Post Missing Required Headers
     Entao A API Deve Retornar Status 401 Unauthorized
     E A Mensagem De Erro Deve Ser "Invalid token"
 
+POST-DEVICE-18 - CODE 201 Post With Extra Headers
+    [Documentation]    Testa o cadastro de dispositivo com headers adicionais
+    ...    @endpoint: POST /devices
+    ...    @status_code: 201 Created
+    ...
+    [Tags]    POST    DEVICE    SUCCESS    API    HEADERS
+    Skip    [BUG: CONSYS-220] A API está retornando uma resposta vazia quando deveria retornar a mensagem "The device has been created successfully"
+    Dado Que Envio Um Payload Valido Com Headers Adicionais
+    Quando Envio Uma Requisicao POST Para /devices
+    Entao A API Deve Retornar Status 201 Created
+    E O Schema Deve Ser "test_schema_post_201_device.json"
+
 ############# Testes de Schema #############
 POST-DEVICE-14 - CODE 201 Schema Validation Success Response
     [Documentation]    Testa se o schema da resposta 201 está correto
@@ -163,44 +197,37 @@ POST-DEVICE-17 - CODE 413 Schema Validation Payload Too Large Response
     Entao A API Deve Retornar Status 413 Payload Too Large
     E O Schema Deve Ser "test_schema_post_413_device.json"
 
-############# Testes Pendentes de Implementação #############
-# Duplicação de recurso
-# Post Duplicate Resource
-#     [Documentation]    Testa o envio de requisições idênticas repetidamente.
+POST-DEVICE-19 - CODE 201 Post Concurrent Requests
+    [Documentation]    Testa o envio de múltiplas requisições simultâneas
+    ...    @endpoint: POST /devices
+    ...    @status_code: 201 Created
+    ...
+    [Tags]    POST    DEVICE    SUCCESS    API    CONCURRENT
+    Skip    [BUG: CONSYS-220] A API está retornando uma resposta vazia quando deveria retornar a mensagem "The device has been created successfully"
+    Dado Que Preparo Multiplos Payloads Para Envio Simultaneo
+    Quando Envio Requisicoes POST Simultaneas Para /devices
+    Entao Todas As Requisicoes Devem Retornar Status 201 Created
+    E Todos Os Dispositivos Devem Ser Criados Corretamente
 
-# Validação de tipos de dados
-# Post Data Type Validation
-#     [Documentation]    Testa se os campos do payload aceitam apenas os tipos corretos.
-
-# Resposta da criação
-# Post Creation Response Validation
-#     [Documentation]    Verifica se o ID ou URI do recurso criado é retornado.
-
-# Segurança
-# Post Sensitive Data Validation
-#     [Documentation]    Verifica se dados sensíveis no payload não são aceitos ou expostos.
-
-# Limites e restrições
-# Post Payload Restriction Validation
-#     [Documentation]    Testa campos com valores fora dos limites permitidos.
-
-# Mensagens de erro
-# Post Error Message Validation
-#     [Documentation]    Verifica se as mensagens de erro retornadas são claras e consistentes.
-
-# Timeout
-# Post Request Timeout
-#     [Documentation]    Testa comportamento da API com requisições que excedem o tempo limite.
-
-# Valores padrão
-# Post Default Value Creation
-#     [Documentation]    Testa a criação de recurso com valores padrão para campos omitidos.
-
-# Concorrência
-# Post Concurrent Requests
-#     [Documentation]    Envia requisições POST simultaneamente para verificar a consistência.
-
-# Headers adicionais
-# Post Extra Headers Validation
-#     [Documentation]    Testa envio de headers extras e verifica comportamento.
+POST-DEVICE-20 - CODE 201 Post With Default Values
+    [Documentation]    Testa a criação de dispositivo com valores padrão para campos omitidos
+    ...    @endpoint: POST /devices
+    ...    @status_code: 201 Created
+    ...    
+    ...    Campos opcionais que devem receber valores padrão:
+    ...    - name: null
+    ...    - blacklisted: false
+    ...    - manufacturingDate: null
+    ...    - ipAddress: null
+    ...    - firstConnection: null
+    [Tags]    POST    DEVICE    SUCCESS    API    DEFAULTS
+    Dado Que Envio Um Payload Apenas Com Campos Obrigatorios
+    Quando Envio Uma Requisicao POST Para /devices
+    Entao A API Deve Retornar Status 201 Created
+    E O Dispositivo Deve Ser Criado Com Os Seguintes Valores Padrao:
+    ...    name=${NONE}
+    ...    blacklisted=${FALSE}
+    ...    manufacturingDate=${NONE}
+    ...    ipAddress=${NONE}
+    ...    firstConnection=${NONE}
 
