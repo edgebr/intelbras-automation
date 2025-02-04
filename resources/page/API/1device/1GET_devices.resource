@@ -194,7 +194,28 @@ Validate Device Schema
     [Documentation]    Valida se o corpo da resposta segue o schema definido
     ${response_json}=    Set Variable    ${response.json()}
     ${json_schema}=    Load JSON From File    ${SCHEMA_PATH}
-    Validate JSON By Schema    ${response_json}    ${json_schema}
+    
+    # Verifica tipo da resposta e ajusta se necessário
+    ${is_list}=    Evaluate    isinstance($response_json, list)
+    ${response_to_validate}=    Run Keyword If    ${is_list}    Set Variable    ${response_json}
+    ...    ELSE    Create List    ${response_json}
+    
+    # Valida campos obrigatórios e schema
+    TRY
+        FOR    ${device}    IN    @{response_to_validate}
+            # Valida campos obrigatórios
+            Dictionary Should Contain Key    ${device}    id
+            Dictionary Should Contain Key    ${device}    serialId
+            Dictionary Should Contain Key    ${device}    name
+            Dictionary Should Contain Key    ${device}    blacklisted
+            Dictionary Should Contain Key    ${device}    productCode
+        END
+        
+        # Valida schema completo
+        ${schema_is_valid}=    Evaluate    jsonschema.validate(instance=${response_to_validate}, schema=${json_schema})    modules=jsonschema
+    EXCEPT    AS    ${error}
+        FAIL    Schema validation failed: ${error}
+    END
 
 Get Device With Invalid Id
     [Arguments]    ${id}
