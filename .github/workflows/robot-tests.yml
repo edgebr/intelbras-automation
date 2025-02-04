@@ -58,6 +58,16 @@ jobs:
         BASE_URL: ${{ secrets.BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
 
+    - name: Run POST Device Tests
+      run: |
+        robot --pythonpath . \
+             --variable RESOURCE_PATH:${PWD}/resources/page/API \
+             -d ./logs \
+             ./test/API/1device/2POST_devices.robot
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_KEY: ${{ secrets.API_KEY }}
+
     - name: Run User Tests
       run: |
         robot --pythonpath . \

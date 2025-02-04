@@ -11,7 +11,7 @@
         "type": "string"
       },
       "name": {
-        "type": "string"
+        "type": ["string", "null"]
       },
       "blacklisted": {
         "type": "boolean"
@@ -34,7 +34,6 @@
     "required": [
       "id",
       "serialId",
-      "name",
       "blacklisted",
       "productCode"
     ]
